@@ -101,9 +101,13 @@ void FCFS(list<Process*> input)
 	
 	while(queue.size() > 0 || current != NULL)
 	{
-		checkArrivalsRR(input,queue, counter);
+		cout << counter << endl;
+		checkArrivals(input,queue, counter);
+		
+		
 		if((counter-counterStart) == (*current).burstTime)
 		{
+			cout << "enntered loop" << endl;	
 			ioWait.push_back(current);
 			(*current).numBurst--;
 			current = *queue.begin();
@@ -155,7 +159,6 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 		return;
 	#endif
 
-
 	list<Process*>::iterator itr;
 	int i = 0;
 	for(itr = input.begin(); itr != input.end(); itr++)
@@ -174,8 +177,7 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 		input.pop_front();
 	}
 
-	#if 0 
-	if(!input.empty()){
+	#if 1 
 		cout << "Time: " << currTime << "Input: ";
 		for(itr = input.begin(); itr != input.end(); itr++){
 			cout << (*(*itr)).id << ", ";
