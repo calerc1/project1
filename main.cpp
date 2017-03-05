@@ -7,10 +7,9 @@
 #include<stdlib.h>
 #include"Process.h"
 
-#if 1
- Carlos is a cocksucker
-# endif
-
+#if 0
+Carlos is a cocksucker
+#endif
 using namespace std;
 
 // <id>|<arrivalTime>|<burstTime>|<numBursts>|<ioTime>
