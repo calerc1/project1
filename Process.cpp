@@ -1,4 +1,5 @@
 #include<string>
+#include<iostream>
 #include"Process.h"
 using namespace std;
 /////////CONSTRUCTORS/////////////////////
@@ -11,6 +12,7 @@ Process::Process()
 	numBurst = 0;
 	ioTime = 0;
 	burstRemain = burstTime;
+	ioWaitRemain = 0;
 }
 
 
@@ -48,13 +50,9 @@ bool compare_id(const Process& p1, const Process& p2)
 }
 
 
+}
 
-
-
-
-
-
-
-
-
-
+void Process::print()
+{
+	cout << this->id << " | " << this->arrivalTime << " | " << this->burstTime << " | " << this->numBurst << " | " << this->ioTime << " | " << endl;
+}
