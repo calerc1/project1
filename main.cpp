@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	/////////FCFS////////////
 	FCFS(inputData); 
 	SRT(inputData);
-	RR(inputData);
+	//RR(inputData);
 	
 	//this will delete all the data from the list<Process*> 
 	list<Process*>::const_iterator iterator;
@@ -97,10 +97,9 @@ void checkArrivals(list<Process*> &input, list<Process*> &queue,int counter)
 
 void FCFS(list<Process*> input)
 {
-	#if 0
+	#if 1  
 	//All time gone by counter
 	int counter = 0;
-	int counter =0;
 	int counterStart = 0;
 	cout << "time " << counter << "ms: Simulator started for FCFS [Q <empty>]" << endl;
 	//priority q for all arriving process
@@ -112,7 +111,7 @@ void FCFS(list<Process*> input)
 	
 	while(queue.size() > 0 || current != NULL)
 	{
-		checkArrivals(input,queue, counter);
+		checkArrivalsRR(input,queue, counter);
 		if((counter-counterStart) == (*current).burstTime)
 		{
 			ioWait.push_back(current);
@@ -135,6 +134,7 @@ void SRT(list<Process*> &input)
 
 void RR(list<Process*> input)
 {	
+	#if 0
 	//priority q for all arriving process
 	list<Process*> queue;
 	list<Process*> toAdd;
@@ -157,6 +157,7 @@ void RR(list<Process*> input)
 		#endif
 		++i;
 	}
+	#endif
 }
 void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime){
 	list<Process*>::iterator itr;
@@ -176,7 +177,7 @@ void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime)
 		input.pop_front();
 	}
 
-	#if 1
+	#if 0 
 	if(!input.empty()){
 		cout << "Time: " << currTime << "Input: ";
 		for(itr = input.begin(); itr != input.end(); itr++){
