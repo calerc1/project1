@@ -185,15 +185,9 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 	}
 
 	#if 0
-		cout << "Time: " << currTime << ", Input: ";
-		for(itr = input.begin(); itr != input.end(); itr++){
-			cout << (*(*itr)).id << ", ";
-		}
+		cout << "Time: " << currTime << ", Input: " << printQueue(input);
 		cout << endl;
-		cout << "toAdd: ";
-		for(itr = toAdd.begin(); itr != toAdd.end(); itr++){
-			cout << (*(*itr)).id << ", ";
-		}
+		cout << "toAdd: " << printQueue(toAdd);
 		cout << endl << endl;
 	#endif
 }
