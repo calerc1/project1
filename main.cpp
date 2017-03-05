@@ -17,11 +17,10 @@ using namespace std;
 ///////////////FUNCTIONS DECLARATIONS//////////////////////////
 void readFile(list<Process*> &input, char* fileName);
 void parseLine(list<Process*> &input, string &line);
-void checkArrivals(list<Process*> &input, list<Process*> queue);
 void FCFS(list<Process*> input);
 void SRT(list<Process*> &input);
 void RR(list<Process*> input);
-void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime);
+void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime);
 
 
 ///////////////MAIN/////////////////////////////////
@@ -85,15 +84,6 @@ void parseLine(list<Process*> &input , string &line)
 	//cout << input.size() << endl;
 }
 
-void checkArrivals(list<Process*> &input, list<Process*> &queue,int counter)
-{
-	cout << "here" << endl;
-	list<Process*>::iterator itr;
-	for(itr = input.begin(); itr != input.end(); itr++)
-	{
-		cout << (*(*itr)).id << endl;
-	}
-}
 
 void FCFS(list<Process*> input)
 {
@@ -151,14 +141,20 @@ void RR(list<Process*> input)
 
 		#if 1
 		if(queue.empty() && input.empty() && current == NULL && p_cs1 == NULL ){
-			cout << "RR end condition reached.\node";
+			cout << "Time: " << i << ", RR end condition reached." << endl;
 			return;
 		}
 		#endif
 		++i;
 	}
 }
-void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime){
+void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
+	#if 1
+		if( (*input.begin())->arrivalTime != currTime )
+		return;
+	#endif
+
+
 	list<Process*>::iterator itr;
 	int i = 0;
 	for(itr = input.begin(); itr != input.end(); itr++)
@@ -169,6 +165,7 @@ void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime)
 		}
 		else if( (*itr)->arrivalTime > currTime ){
 			break;
+
 		}
 		++i;
 	}
@@ -177,8 +174,7 @@ void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime)
 	}
 
 	#if 1
-	if(!input.empty()){
-		cout << "Time: " << currTime << "Input: ";
+		cout << "Time: " << currTime << ", Input: ";
 		for(itr = input.begin(); itr != input.end(); itr++){
 			cout << (*(*itr)).id << ", ";
 		}
@@ -188,7 +184,6 @@ void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime)
 			cout << (*(*itr)).id << ", ";
 		}
 		cout << endl << endl;
-	}
 	#endif
 }
 
