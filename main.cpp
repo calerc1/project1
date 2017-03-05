@@ -149,8 +149,8 @@ void RR(list<Process*> input)
 		toAdd.clear();
 		checkArrivalsRR(input, toAdd, i);
 
-		#if 0
-		if(queue.empty() && current == NULL && p_cs1 == NULL){
+		#if 1
+		if(queue.empty() && input.empty() && current == NULL && p_cs1 == NULL ){
 			cout << "RR end condition reached.\node";
 			return;
 		}

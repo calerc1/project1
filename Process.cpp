@@ -50,8 +50,6 @@ bool compare_id(const Process& p1, const Process& p2)
 }
 
 
-}
-
 void Process::print()
 {
 	cout << this->id << " | " << this->arrivalTime << " | " << this->burstTime << " | " << this->numBurst << " | " << this->ioTime << " | " << endl;
