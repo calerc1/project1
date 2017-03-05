@@ -27,6 +27,10 @@ string printQueue(const list<Process*> &queue);
 ///////////////MAIN/////////////////////////////////
 int main(int argc, char* argv[])
 {
+	if(argc < 2){
+		cerr << "ERROR: Not enough command line arguments" << endl;
+		return EXIT_FAILURE;
+	}
 	//reading file onto a vector
 	list<Process*> inputData;
 	char* fileName = argv[1];
