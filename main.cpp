@@ -7,7 +7,6 @@
 #include<stdlib.h>
 #include"Process.h"
 
-
 using namespace std;
 
 // <id>|<arrivalTime>|<burstTime>|<numBursts>|<ioTime>
@@ -29,7 +28,6 @@ int main(int argc, char* argv[])
 	readFile(inputData,fileName);
 	/////////FCFS////////////
 	FCFS(inputData); 
-	
 	
 	//this will delete all the data from the list<Process*> 
 	list<Process*>::const_iterator iterator;
@@ -80,7 +78,7 @@ void parseLine(list<Process*> &input , string &line)
 	//cout << input.size() << endl;
 }
 
-void checkArrivals(list<Process*> &input, list<Process*> queue)
+void checkArrivals(list<Process*> &input, list<Process*> &queue,int counter)
 {
 	cout << "here" << endl;
 	list<Process*>::iterator itr;
@@ -94,19 +92,29 @@ void FCFS(list<Process*> input)
 {
 	//All time gone by counter
 	int counter =0;
+	int counterStart = 0;
+	cout << "time " << counter << "ms: Simulator started for FCFS [Q <empty>]" << endl;
 	//priority q for all arriving process
 	list<Process*> queue;
+	list<Process*> ioWait;
 	//the first process to arrive
 	Process* current = *input.begin();
 	input.pop_front();
+	
 	while(queue.size() > 0 || current != NULL)
 	{
-		checkArrivals(input,queue);
-		if(counter == (*current).burstTime )
+		checkArrivals(input,queue, counter);
+		if((counter-counterStart) == (*current).burstTime)
 		{
+			ioWait.push_back(current);
 			(*current).numBurst--;
-		}	
+			current = *queue.begin();
+			queue.pop_front();	
+			counterStart = counter;
+					
+		}
 		counter++;
+		counterStart++;
 	}
 }
 
