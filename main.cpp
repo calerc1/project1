@@ -7,6 +7,8 @@
 #include<stdlib.h>
 #include"Process.h"
 
+#define t_cs 6
+#define t_slice 940
 
 using namespace std;
 
@@ -17,8 +19,10 @@ void readFile(list<Process*> &input, char* fileName);
 void parseLine(list<Process*> &input, string &line);
 void checkArrivals(list<Process*> &input, list<Process*> queue);
 void FCFS(list<Process*> input);
-void SRT(list<Process*> &input, string &line);
-void RR(list<Process*> &input, string &line);
+void SRT(list<Process*> &input);
+void RR(list<Process*> input);
+void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime);
+
 
 ///////////////MAIN/////////////////////////////////
 int main(int argc, char* argv[])
@@ -29,7 +33,8 @@ int main(int argc, char* argv[])
 	readFile(inputData,fileName);
 	/////////FCFS////////////
 	FCFS(inputData); 
-	
+	SRT(inputData);
+	RR(inputData);
 	
 	//this will delete all the data from the list<Process*> 
 	list<Process*>::const_iterator iterator;
@@ -92,8 +97,9 @@ void checkArrivals(list<Process*> &input, list<Process*> queue)
 
 void FCFS(list<Process*> input)
 {
+	#if 0
 	//All time gone by counter
-	int counter =0;
+	int counter = 0;
 	//priority q for all arriving process
 	list<Process*> queue;
 	//the first process to arrive
@@ -108,14 +114,87 @@ void FCFS(list<Process*> input)
 		}	
 		counter++;
 	}
+	#endif
 }
 
-void SRT(list<Process*> &input, string &line)
+void SRT(list<Process*> &input)
 {
 	
 }
 
-void RR(list<Process*> &input, string &line)
-{
-	
+void RR(list<Process*> input)
+{	
+	//priority q for all arriving process
+	list<Process*> queue;
+	list<Process*> toAdd;
+	Process* current = NULL;
+	Process* p_cs1 = NULL;  //the process to be the current process in 3 ms total time
+	Process* p_cs2 = NULL; //the process taken away from the current process in 3 ms total time
+	//current should = NULL while cs1 and cs2 have values
+
+	int temp = 0;
+	int i = 0;
+	while(1){
+		toAdd.clear();
+		checkArrivalsRR(input, toAdd, i);
+
+		#if 0
+		if(queue.empty() && current == NULL && p_cs1 == NULL){
+			cout << "RR end condition reached.\node";
+			return;
+		}
+		#endif
+		++i;
+	}
 }
+void checkArrivalsRR(list<Process*> &input, list<Process*> &toAdd, int currTime){
+	list<Process*>::iterator itr;
+	int i = 0;
+	for(itr = input.begin(); itr != input.end(); itr++)
+	{
+		if( (*itr)->arrivalTime == currTime ){
+			toAdd.push_back(*itr);
+
+		}
+		else if( (*itr)->arrivalTime > currTime ){
+			break;
+		}
+		++i;
+	}
+	for(int j = 0; j < i; ++j){
+		input.pop_front();
+	}
+
+	#if 1
+	if(!input.empty()){
+		cout << "Time: " << currTime << "Input: ";
+		for(itr = input.begin(); itr != input.end(); itr++){
+			cout << (*(*itr)).id << ", ";
+		}
+		cout << endl;
+		cout << "toAdd: ";
+		for(itr = toAdd.begin(); itr != toAdd.end(); itr++){
+			cout << (*(*itr)).id << ", ";
+		}
+		cout << endl << endl;
+	}
+	#endif
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

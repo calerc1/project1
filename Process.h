@@ -3,7 +3,7 @@ class Process{
 public:
     Process();
     Process(string Id, int ArrivalTime, int BurstTime, int NumBurst, int IoTime);
-    Process(const Process &p2);
+    Process(const Process& p2);
 	string id;
 	int arrivalTime;
 	int burstTime;
