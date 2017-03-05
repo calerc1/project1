@@ -21,11 +21,16 @@ void FCFS(list<Process*> input);
 void SRT(list<Process*> &input);
 void RR(list<Process*> input);
 void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime);
+string printQueue(const list<Process*> &queue);
 
 
 ///////////////MAIN/////////////////////////////////
 int main(int argc, char* argv[])
 {
+	if(argc < 2){
+		cerr << "ERROR: Not enough command line arguments" << endl;
+		return EXIT_FAILURE;
+	}
 	//reading file onto a vector
 	list<Process*> inputData;
 	char* fileName = argv[1];
@@ -133,18 +138,20 @@ void RR(list<Process*> input)
 	list<Process*> queue;
 	list<Process*> toAdd;
 	Process* current = NULL;
-	Process* p_cs1 = NULL;  //the process to be the current process in 3 ms total time
-	Process* p_cs2 = NULL; //the process taken away from the current process in 3 ms total time
-	//current should = NULL while cs1 and cs2 have values
-
-	int temp = 0;
+	Process* p_cs = NULL;  //the process to be in the context switch
+	//current should = NULL while cs has a value
+	int cs_counter = 0; //counts up to 3
+	bool cs = true;
 	int i = 0;
+	cout << "time " << i << "ms: Simulator started for RR " << printQueue(queue) << endl;
 	while(1){
 		toAdd.clear();
-		checkArrivalsRR(input, toAdd, i);
-
+		checkArrivals(input, toAdd, i);
+		if(cs_counter == 3){
+			cs_counter = 0;
+		}
 		#if 1
-		if(queue.empty() && input.empty() && current == NULL && p_cs1 == NULL ){
+		if(queue.empty() && input.empty() && current == NULL && p_cs == NULL ){
 			cout << "Time: " << i << ", RR end condition reached." << endl;
 			return;
 		}
@@ -155,7 +162,7 @@ void RR(list<Process*> input)
 }
 void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 	#if 1
-		if( (*input.begin())->arrivalTime != currTime )
+		if( input.empty() || ((*input.begin())->arrivalTime != currTime) )
 		return;
 	#endif
 
@@ -177,8 +184,8 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 		input.pop_front();
 	}
 
-	#if 1 
-		cout << "Time: " << currTime << "Input: ";
+	#if 0
+		cout << "Time: " << currTime << ", Input: ";
 		for(itr = input.begin(); itr != input.end(); itr++){
 			cout << (*(*itr)).id << ", ";
 		}
@@ -191,7 +198,20 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 	#endif
 }
 
+string printQueue(const list<Process*> &queue){
+	string s = "[Q ";
+	if(queue.empty()){
+		 s += "<empty>]";
+	}
+	else{
+		list<Process*>::const_iterator itr = queue.begin();
+		for(; itr != queue.end(); ++itr){
 
+		}
+		s += "]";
+	}
+	return s;
+}
 
 
 
