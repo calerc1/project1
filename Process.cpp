@@ -1,5 +1,5 @@
-#include<string>
 #include<iostream>
+#include<string>
 #include"Process.h"
 using namespace std;
 /////////CONSTRUCTORS/////////////////////
@@ -12,7 +12,6 @@ Process::Process()
 	numBurst = 0;
 	ioTime = 0;
 	burstRemain = burstTime;
-	ioWaitRemain = 0;
 }
 
 
