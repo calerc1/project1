@@ -10,6 +10,6 @@ public:
 	int numBurst;
 	int ioTime;
 	int burstRemain;
-	int ioWaitRemain;
+	int ioWaitEnd;
 	void print();
 };
