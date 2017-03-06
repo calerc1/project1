@@ -24,7 +24,7 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime);
 string printQueue(const list<Process*> &queue);
 
 
-///////////////MAIN/////////////////////////////////
+/////////////////////////MAIN///////////////////////////////////
 int main(int argc, char* argv[])
 {
 	if(argc < 2){
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	list<Process*> inputData;
 	char* fileName = argv[1];
 	readFile(inputData,fileName);
-	/////////FCFS////////////
+	//////////////FCFS//////////////////
 	FCFS(inputData); 
 	SRT(inputData);
 	//RR(inputData);
@@ -106,22 +106,29 @@ void FCFS(list<Process*> input)
 	
 	while(queue.size() > 0 || current != NULL)
 	{
-		cout << counter << endl;
+		//cout << counter << endl;
 		checkArrivals(input,queue, counter);
-		
-		
 		if((counter-counterStart) == (*current).burstTime)
 		{
-			cout << "enntered loop" << endl;	
+			cout << "entered loop" << endl;	
+			(*current).print();
 			ioWait.push_back(current);
 			(*current).numBurst--;
-			current = *queue.begin();
-			queue.pop_front();	
-			counterStart = counter;
-					
+			cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
+			
+			cout << "curr size " << queue.size() << endl;
+			if(queue.size() > 0)
+			{	
+				current = *queue.begin();
+				queue.pop_front();	
+				counterStart = counter;
+			}
+			else
+			{
+				current = NULL;
+			}
 		}
 		counter++;
-		counterStart++;
 	}
 	#endif
 }
@@ -174,13 +181,14 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 			toAdd.push_back(*itr);
 
 		}
-		else if( (*itr)->arrivalTime > currTime ){
+		else if( (*itr)->arrivalTime > currTime )
+		{
 			break;
-
 		}
 		++i;
 	}
-	for(int j = 0; j < i; ++j){
+	for(int j = 0; j < i; ++j)
+	{
 		input.pop_front();
 	}
 
@@ -192,18 +200,23 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 	#endif
 }
 
-string printQueue(const list<Process*> &queue){
-	string s = "[Q ";
+string printQueue(const list<Process*> &queue)
+{
+	string s = "[Q";
 	if(queue.empty()){
 		 s += "<empty>]";
 	}
+	#if 1 
 	else{
-		list<Process*>::const_iterator itr = queue.begin();
-		for(; itr != queue.end(); ++itr){
-
+		list<Process*>::const_iterator itr;
+		for(itr = queue.begin(); itr != queue.end(); ++itr)
+		{
+			s += " ";	
+			s += (*(*itr)).id;
 		}
 		s += "]";
 	}
+	#endif
 	return s;
 }
 
