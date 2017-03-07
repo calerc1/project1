@@ -83,11 +83,9 @@ void parseLine(list<Process*> &input , string &line)
 	{
 		vars.push_back(token);
 	}
-	cout << (int)atoi(vars[4].c_str()) << endl;
 	Process* node = new Process(vars[0], atoi(vars[1].c_str()), atoi(vars[2].c_str()), atoi(vars[3].c_str()), atoi(vars[4].c_str()));
 	
 	input.push_back(node);
-	//cout << input.size() << endl;
 }
 
 
@@ -104,22 +102,25 @@ void FCFS(list<Process*> input)
 	//the first process to arrive
 	Process* current = *input.begin();
 	input.pop_front();
+	string debug;
+	if(queue.size()  == 0 && ioWait.size() > 0)
+	{
+		cout << "REEEEEEEEEEEEEEEEEEEEEEEEEEee" << endl;
+	}
 	
 	while(queue.size() > 0 || current != NULL || ioWait.size() > 0)
 	{
-		//cout << counter << endl;
-		//cout << printQueue(queue) << endl;		
-		//cout << printQueue(ioWait) << endl;		
 
 		//checks for any new arrivals, and puts them in the back of the queue
 		checkArrivals(input,queue, counter);
 		//checks for proceces that have expired in the ioWait queue to put in the ready queue
 		checkIoWait(counter, ioWait, queue);
 		//checks that the current Process that is being handled has not expiered
-		//cout << counter << " " << counterStart <<endl;
 			
 		if(current != NULL && ((counter-counterStart) == (*current).burstTime))
 		{
+			cout << "at Process done" << endl;
+			cin >> debug;
 			checkCurrent(queue,ioWait, current, counter , counterStart);	
 		}
 		else if(current  == NULL)
@@ -131,8 +132,11 @@ void FCFS(list<Process*> input)
 			counterStart = counter;	
 			}		
 		}
+		else if(((counter-counterStart) > (*current).burstTime))
+		{
+			cout << " mutha fvcking error "  << endl;
+		}
 		//checks that no process with io wait 0ms was added to the queue
-		checkIoWait(counter, ioWait, queue);
 		counter++;
 	}
 	#endif
@@ -244,7 +248,7 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 				// queue
 				queue.push_back(*iterator);
 				// alternatively, i = items.erase(i);
-				cout << (*iterator)->id << " is done with ioWait and was pushed to the end of the queue" << endl; 
+				cout << "time " << counter << "ms: Process " << (*iterator)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl; 
 				ioWait.erase(iterator++);  
 				
 				cout << "after" << endl << printQueue(queue) << "  " << printQueue(ioWait) << endl;
@@ -273,22 +277,39 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart)
 {
 		(*current).numBurst--;
-		current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime));
-		ioWait.push_back(current);
-		
+		if(current->numBurst > 0 )
+		{
+			current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime));
+			ioWait.push_back(current);
+			
 
-		cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
-		cout << "time " << counter << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
+			cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
+			cout << "time " << counter << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
 
-		if(queue.size() > 0)
-		{	
-			current = *queue.begin();
-			queue.pop_front();	
-			counterStart = counter;
+			if(queue.size() > 0)
+			{	
+				current = *queue.begin();
+				queue.pop_front();	
+				counterStart = counter;
+			}
+			else
+			{
+				current == NULL;
+			}
+			
+			cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 		}
 		else
 		{
-			current == NULL;
+			cout<< "time " << counter << "ms: Process " << current->id <<  "terminated " << printQueue(queue) << endl;
+			
+			current = *queue.begin();
+			queue.pop_front();
+			counterStart = counter;
+			
+			cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
+
+
 		}
 
 }
