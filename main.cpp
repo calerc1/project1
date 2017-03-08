@@ -25,6 +25,7 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime);
 string printQueue(const list<Process*> &queue);
 void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart);
 void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
+void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart);
 
 /////////////////////////MAIN///////////////////////////////////
 
@@ -95,47 +96,48 @@ void FCFS(list<Process*> input)
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
+	bool loading;
 	cout << "time " << counter << "ms: Simulator started for FCFS [Q <empty>]" << endl;
 	//priority q for all arriving process
 	list<Process*> queue;
 	list<Process*> ioWait;
 	//the first process to arrive
-	Process* current = *input.begin();
-	input.pop_front();
+	Process* current =	NULL; 
+
 	string debug;
-	if(queue.size()  == 0 && ioWait.size() > 0)
-	{
-		cout << "REEEEEEEEEEEEEEEEEEEEEEEEEEee" << endl;
-	}
-	
+	//need to have something on the queue in able for the loop to execute		
+	checkArrivals(input,queue, counter);
 	while(queue.size() > 0 || current != NULL || ioWait.size() > 0)
 	{
-
 		//checks for any new arrivals, and puts them in the back of the queue
 		checkArrivals(input,queue, counter);
 		//checks for proceces that have expired in the ioWait queue to put in the ready queue
 		checkIoWait(counter, ioWait, queue);
+
 		//checks that the current Process that is being handled has not expiered
-			
 		if(current != NULL && ((counter-counterStart) == (*current).burstTime))
 		{
-			cout << "at Process done" << endl;
-			cin >> debug;
+			//Checks that the current Process is not expiered		
 			checkCurrent(queue,ioWait, current, counter , counterStart);	
 		}
+
 		else if(current  == NULL)
 		{
 			
-			if(queue.size() > 0)
+			if(!queue.empty())
 			{
-			current = *queue.begin();
-			counterStart = counter;	
+				current = *queue.begin();
+				counterStart = counter;	
+				queue.pop_front();
+				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 			}		
 		}
+		#if 0
 		else if(((counter-counterStart) > (*current).burstTime))
 		{
-			cout << " mutha fvcking error "  << endl;
+			//cout << " mutha fvcking error "  << endl;
 		}
+		#endif
 		//checks that no process with io wait 0ms was added to the queue
 		counter++;
 	}
@@ -242,17 +244,12 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 				//-> process needs to be terminated
 			if((*iterator)->numBurst > 0)
 			{//case 1
-				cout << "before" << endl << printQueue(queue) << "  " << printQueue(ioWait) << endl;
-				(*iterator)->print();
 				//pushes process to the end of the queue and deletes it from the ioWait 
 				// queue
 				queue.push_back(*iterator);
 				// alternatively, i = items.erase(i);
 				cout << "time " << counter << "ms: Process " << (*iterator)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl; 
 				ioWait.erase(iterator++);  
-				
-				cout << "after" << endl << printQueue(queue) << "  " << printQueue(ioWait) << endl;
-				
 			
 			}
 			// case two
@@ -277,6 +274,7 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart)
 {
 		(*current).numBurst--;
+		current->print();
 		if(current->numBurst > 0 )
 		{
 			current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime));
@@ -286,30 +284,42 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
 			cout << "time " << counter << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
 
-			if(queue.size() > 0)
+			if(!queue.empty())
 			{	
 				current = *queue.begin();
 				queue.pop_front();	
 				counterStart = counter;
+				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
+				
 			}
 			else
 			{
-				current == NULL;
+				current = NULL;
 			}
 			
-			cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 		}
 		else
 		{
 			cout<< "time " << counter << "ms: Process " << current->id <<  "terminated " << printQueue(queue) << endl;
 			
-			current = *queue.begin();
-			queue.pop_front();
-			counterStart = counter;
+			if(!queue.empty())
+			{
+				current = *queue.begin();
+				queue.pop_front();
+				counterStart = counter;
+				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
+			}	
+			else
+			{
+				current  = NULL;
+			}
 			
-			cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 
 
 		}
 
+}
+void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart)
+{
+	
 }
