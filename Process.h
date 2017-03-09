@@ -15,5 +15,6 @@ public:
 	int ioTime;
 	int burstRemain;
 	int ioWaitEnd;
+	int timeTerminated;
 	void print();
 };

@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 	////////////RR////////////////////
 	list<Process*> RRList;
 	copyList(inputData, RRList);
-	RR(RRList);
+	//RR(RRList);
 	//freeList(RRList);
 	
 	//this will delete all the data from the list<Process*> 
@@ -107,6 +107,21 @@ void FCFS(list<Process*> input)
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
+	
+	float averageBurst = 0;
+	float averageWait = 0;
+	float averageTurnaround = 0;
+	int totalPreemptions = 0;
+	int numContextSwitch = 0;
+
+	list<Process*>::iterator itr1 = input.begin();
+	while(itr1 != input.end())
+	{
+		averageBurst += (*itr1)->burstTime * (*itr1)->numBurst;
+		numContextSwitch += (*itr1)->numBurst;
+		itr1++;
+	}
+	averageBurst /= numContextSwitch;
 	cout << "time " << counter << "ms: Simulator started for FCFS [Q <empty>]" << endl;
 	//priority q for all arriving process
 	list<Process*> queue;
@@ -155,6 +170,12 @@ void FCFS(list<Process*> input)
 	}
 	cout << "time "  << (counter + 2) << "ms: Simulator ended for FCFS" << endl;
 	#endif
+	cout << "Algorithm FCFS" << endl;
+	cout << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
+	cout << "-- average wait time: " << averageWait << " ms" << endl;
+	cout << "-- average turnaround time: " <<  averageTurnaround << " ms" << endl;
+	cout << "-- total number of context switches: " << numContextSwitch << endl;
+	cout << "-- total number of preemptions: " << totalPreemptions << endl;
 }
 
 void SRT(list<Process*> &input)
@@ -446,14 +467,14 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			ioWait.push_back(current);
 			
 			if((*current).numBurst == 1){
-				cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go" << printQueue(queue) << endl;
+				cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go " << printQueue(queue) << endl;
 			}
 			else{
-				cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
+				cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go " << printQueue(queue) << endl;
 
 			}
 			loadCPU(counter, queue, ioWait, current, counterStart, input);
-			cout << "time " << counter << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
+			cout << "time " << counter - 3 << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
 
 			if(!queue.empty())
 			{	
