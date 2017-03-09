@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
 	copyList(inputData, FCFSList);
-	//FCFS(FCFSList); 
+	FCFS(FCFSList); 
 	freeList(FCFSList);
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	list<Process*> RRList;
 	copyList(inputData, RRList);
 	RR(RRList);
-	freeList(RRList);
+	//freeList(RRList);
 	
 	//this will delete all the data from the list<Process*> 
 	freeList(inputData);
@@ -282,6 +282,9 @@ void RR(list<Process*> input)
 			else{
 				
 				cout << "time " << i <<"ms: Process " << (*current).id << " terminated " << printQueue(queue) << endl;
+				Process* temp = current;
+				current = NULL;
+				delete(temp);
 				p_cs = NULL;
 			}
 			current = NULL;
@@ -291,10 +294,10 @@ void RR(list<Process*> input)
 		//Handle print statements for newArrival processes
 		while(!newArrivals.empty()){
 			itr = newArrivals.begin();
-			newArrivals.pop_front();
-			//toAdd.push_back(*itr);
 			queue.push_back(*itr);
 			cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			newArrivals.pop_front();
+			//toAdd.push_back(*itr);
 		}
 	#if 0
 		if(i == 4000){
@@ -315,8 +318,8 @@ void RR(list<Process*> input)
 			#if 0
 			cout << "time " << i << "ms: Process " << (*itr)->id <<" added to ready queue " << printQueue(queue) << endl;
 			#endif
-			toAdd.pop_front();
 			queue.push_back(*itr);
+			toAdd.pop_front();
 		}
 		//start condition (count from 3 to 6)
 		if(!queue.empty() && current == NULL && p_cs == NULL && cs == false){
