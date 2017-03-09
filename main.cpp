@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 	//freeList(RRList);
 	
 	//this will delete all the data from the list<Process*> 
-	freeList(inputData);
+	//freeList(inputData);
   	return 1;
 }
 
@@ -315,8 +315,8 @@ void RR(list<Process*> input)
 			#if 0
 			cout << "time " << i << "ms: Process " << (*itr)->id <<" added to ready queue " << printQueue(queue) << endl;
 			#endif
-			toAdd.pop_front();
 			queue.push_back(*itr);
+			toAdd.pop_front();
 		}
 		//start condition (count from 3 to 6)
 		if(!queue.empty() && current == NULL && p_cs == NULL && cs == false){
@@ -472,6 +472,10 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 		{
 			cout<< "time " << counter << "ms: Process " << current->id <<  " terminated " << printQueue(queue) << endl;
 			loadCPU(counter, queue, ioWait, current, counterStart,input);
+			Process* tmp = current;
+			current =NULL;
+			delete(tmp);
+			tmp =NULL;
 			
 			
 			if(!queue.empty())
