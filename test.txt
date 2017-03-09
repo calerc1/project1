@@ -1,0 +1,157 @@
+time 0ms: Simulator started for FCFS [Q <empty>]
+time 0ms: Process A arrived and added to ready queue [Q A]
+time 0ms: Process B arrived and added to ready queue [Q A B]
+time 3ms: Process A started using the CPU [Q B]
+time 171ms: Process A completed a CPU burst; 4 bursts to go [Q B]
+time 171ms: Process A switching out of CPU; will block on I/O until time 461ms [Q B]
+time 177ms: Process B started using the CPU [Q <empty>]
+time 190ms: Process C arrived and added to ready queue [Q C]
+time 250ms: Process D arrived and added to ready queue [Q C D]
+time 461ms: Process A completed I/O; added to ready queue [Q C D A]
+time 562ms: Process B terminated [Q C D A]
+time 568ms: Process C started using the CPU [Q D A]
+time 665ms: Process C completed a CPU burst; 4 bursts to go [Q D A]
+time 665ms: Process C switching out of CPU; will block on I/O until time 3167ms [Q D A]
+time 671ms: Process D started using the CPU [Q A]
+time 2441ms: Process D completed a CPU burst; 1 bursts to go [Q A]
+time 2441ms: Process D switching out of CPU; will block on I/O until time 3266ms [Q A]
+time 2447ms: Process A started using the CPU [Q <empty>]
+time 2615ms: Process A completed a CPU burst; 3 bursts to go [Q <empty>]
+time 2615ms: Process A switching out of CPU; will block on I/O until time 2905ms [Q <empty>]
+time 2905ms: Process A completed I/O; added to ready queue [Q A]
+time 2908ms: Process A started using the CPU [Q <empty>]
+time 3076ms: Process A completed a CPU burst; 2 bursts to go [Q <empty>]
+time 3076ms: Process A switching out of CPU; will block on I/O until time 3366ms [Q <empty>]
+time 3167ms: Process C completed I/O; added to ready queue [Q C]
+time 3170ms: Process C started using the CPU [Q <empty>]
+time 3266ms: Process D completed I/O; added to ready queue [Q D]
+time 3267ms: Process C completed a CPU burst; 3 bursts to go [Q D]
+time 3267ms: Process C switching out of CPU; will block on I/O until time 5769ms [Q D]
+time 3273ms: Process D started using the CPU [Q <empty>]
+time 3366ms: Process A completed I/O; added to ready queue [Q A]
+time 5043ms: Process D terminated [Q A]
+time 5049ms: Process A started using the CPU [Q <empty>]
+time 5217ms: Process A completed a CPU burst; 1 bursts to go [Q <empty>]
+time 5217ms: Process A switching out of CPU; will block on I/O until time 5507ms [Q <empty>]
+time 5507ms: Process A completed I/O; added to ready queue [Q A]
+time 5510ms: Process A started using the CPU [Q <empty>]
+time 5678ms: Process A terminated [Q <empty>]
+time 5769ms: Process C completed I/O; added to ready queue [Q C]
+time 5772ms: Process C started using the CPU [Q <empty>]
+time 5869ms: Process C completed a CPU burst; 2 bursts to go [Q <empty>]
+time 5869ms: Process C switching out of CPU; will block on I/O until time 8371ms [Q <empty>]
+time 8371ms: Process C completed I/O; added to ready queue [Q C]
+time 8374ms: Process C started using the CPU [Q <empty>]
+time 8471ms: Process C completed a CPU burst; 1 bursts to go [Q <empty>]
+time 8471ms: Process C switching out of CPU; will block on I/O until time 10973ms [Q <empty>]
+time 10973ms: Process C completed I/O; added to ready queue [Q C]
+time 10976ms: Process C started using the CPU [Q <empty>]
+time 11073ms: Process C terminated [Q <empty>]
+time 11076ms: Simulator ended for FCFS
+time 0ms: Simulator started for RR [Q <empty>]
+time 0
+time 0ms: Process A arrived and added to ready queue [Q A]
+time 0ms: Process B arrived and added to ready queue [Q A B]
+time 0ms: Process A arrived and added to ready queue [Q <empty>]
+time 0ms: Process B arrived and added to ready queue [Q <empty>]
+time 1
+time 2
+time 3
+time 3ms: Process A started using the CPU [Q B]
+time 4
+time 5
+time 6
+time 7
+time 8
+time 9
+time 10
+time 11
+time 12
+time 13
+time 14
+time 15
+time 16
+time 17
+time 18
+time 19
+time 20
+time 21
+time 22
+time 23
+time 24
+time 25
+time 26
+time 27
+time 28
+time 29
+time 30
+time 31
+time 32
+time 33
+time 34
+time 35
+time 36
+time 37
+time 38
+time 39
+time 40
+time 41
+time 42
+time 43
+time 44
+time 45
+time 46
+time 47
+time 48
+time 49
+time 50
+time 51
+time 52
+time 53
+time 54
+time 55
+time 56
+time 57
+time 58
+time 59
+time 60
+time 61
+time 62
+time 63
+time 64
+time 65
+time 66
+time 67
+time 68
+time 69
+time 70
+time 71
+time 72
+time 73
+time 74
+time 75
+time 76
+time 77
+time 78
+time 79
+time 80
+time 81
+time 82
+time 83
+time 84
+time 85
+time 86
+time 87
+time 88
+time 89
+time 90
+time 91
+time 92
+time 93
+time 94
+time 95
+time 96
+time 97
+time 98
+time 99
+time 100
