@@ -31,6 +31,15 @@ void copyList(list<Process*> &queue, list<Process*> &copyArray);
 void freeList(list<Process*> &toFree);
 
 
+// function object
+struct id_sort : public std::binary_function<Process*, Process*, bool>
+{
+	bool operator()(const Process* const& p1, const Process* const& p2)
+	{
+		return (*p1).id < (*p2).id;
+	}
+};
+
 /////////////////////////MAIN///////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -46,7 +55,7 @@ int main(int argc, char* argv[])
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
 	copyList(inputData, FCFSList);
-	FCFS(FCFSList); 
+	//FCFS(FCFSList); 
 	freeList(FCFSList);
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
@@ -58,7 +67,7 @@ int main(int argc, char* argv[])
 	copyList(inputData, RRList);
 	RR(RRList);
 	//freeList(RRList);
-	
+
 	//this will delete all the data from the list<Process*> 
 	freeList(inputData);
   	return 1;
@@ -95,7 +104,9 @@ void parseLine(list<Process*> &input , string &line)
 	while(getline(ss, token, '|')) 
 	{
 		vars.push_back(token);
+		//cout << token << "|";
 	}
+	//cout <<endl;
 	Process* node = new Process(vars[0], atoi(vars[1].c_str()), atoi(vars[2].c_str()), atoi(vars[3].c_str()), atoi(vars[4].c_str()));
 	
 	input.push_back(node);
@@ -275,6 +286,7 @@ void RR(list<Process*> input)
 
 				}
 				cout << "time " << i << "ms: Process " << (*current).id << " switching out of CPU; will block on I/O until time " << i + (*current).ioTime + 3 <<"ms " << printQueue(queue) << endl;
+
 				p_cs = current;
 				ioAdd = true;
 			}
@@ -294,10 +306,12 @@ void RR(list<Process*> input)
 		//Handle print statements for newArrival processes
 		while(!newArrivals.empty()){
 			itr = newArrivals.begin();
-			queue.push_back(*itr);
-			cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			//queue.push_back(*itr);
+			(*itr)->type = "input";
+			toAdd.push_back(*itr);
+			//cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
 			newArrivals.pop_front();
-			//toAdd.push_back(*itr);
+			
 		}
 	#if 0
 		if(i == 4000){
@@ -309,16 +323,25 @@ void RR(list<Process*> input)
 		}
 		//updateIOQueue(ioQueue);
 		//officially add all processes to queue
-		checkIoWait(i, ioQueue, queue);
-		#if 0
-		sort(toAdd.begin(),toAdd.end(), id_sort());
+		checkIoWait(i, ioQueue, toAdd);
+		#if 1
+		toAdd.sort(id_sort());
 		#endif
 		while(!toAdd.empty()){
 			itr = toAdd.begin();
-			#if 0
-			cout << "time " << i << "ms: Process " << (*itr)->id <<" added to ready queue " << printQueue(queue) << endl;
-			#endif
 			queue.push_back(*itr);
+			#if 1
+			if((*itr)->type == "I/O"){
+				cout << "time " << i << "ms: Process " << (*itr)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl;  
+			}
+			else if( (*itr)->type == "input" ){
+				cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			}
+			else if( (*itr)->type == "" ){
+
+			}
+			#endif
+			(*itr)->type = "";
 			toAdd.pop_front();
 		}
 		//start condition (count from 3 to 6)
@@ -409,9 +432,12 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 			{//case 1
 				//pushes process to the end of the queue and deletes it from the ioWait 
 				// queue
+				(*iterator)->type = "I/O";
 				queue.push_back(*iterator);
 				// alternatively, i = items.erase(i);
+				#if 0
 				cout << "time " << counter << "ms: Process " << (*iterator)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl; 
+				#endif
 				ioWait.erase(iterator++);  
 			
 			}

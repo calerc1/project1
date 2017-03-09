@@ -1,3 +1,6 @@
+#include <string>
+
+
 using namespace std;
 class Process{
 public:
@@ -15,5 +18,7 @@ public:
 	int ioTime;
 	int burstRemain;
 	int ioWaitEnd;
+	string type;
 	void print();
 };
+

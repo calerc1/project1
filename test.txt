@@ -1,3 +1,7 @@
+A|0|168|5|287|
+B|0|385|1|0|
+C|190|97|5|2499|
+D|250|1770|2|822|
 time 0ms: Simulator started for RR [Q <empty>]
 time 0ms: Process A arrived and added to ready queue [Q A]
 time 0ms: Process B arrived and added to ready queue [Q A B]
