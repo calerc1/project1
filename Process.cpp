@@ -13,6 +13,7 @@ Process::Process()
 	numBurst = 0;
 	ioTime = 0;
 	burstRemain = burstTime;
+	ioWaitEnd = -1;
 }
 
 
@@ -45,18 +46,18 @@ bool compare_arrivalTime(const Process& p1, const Process& p2)
 }
 void Process::print()
 {
-	cout << this->id << " | " << this->arrivalTime << " | " << this->burstTime << " | " << this->numBurst << " | " << this->ioTime << " | " << endl;
+	cout << this->id << "|" << this->arrivalTime << "|" << this->burstTime << "|" << this->numBurst << "|" << this->ioTime << "|" << this->burstRemain << "|" << ioWaitEnd << endl;
 }
 
 // function object
 struct id_sort : public std::binary_function<Process*, Process*, bool>
 {
-	bool operator()(const Process*& a, const Process*& b)
+	bool operator()(const Process* const& a, const Process* const& b)
 	{
 		return (*a).id < (*b).id;
 	}
 };
-bool compare_id(const Process*& p1, const Process*& p2)
+bool compare_id(const Process* const& p1, const Process* const& p2)
 {
    return (*p1).id < (*p2).id;
 	//cout << this->id << " | " << this->arrivalTime << " | " << this->burstTime << " | " << this->numBurst << " | " << this->ioTime << " | " << this->ioWaitEnd << " |"  << endl;
