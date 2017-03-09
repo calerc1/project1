@@ -28,7 +28,7 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
 void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
 void copyList(list<Process*> &queue, list<Process*> &copyArray);
-void freeList(list<Process*> & toFree);
+void freeList(list<Process*> &toFree);
 
 
 /////////////////////////MAIN///////////////////////////////////
@@ -45,19 +45,19 @@ int main(int argc, char* argv[])
 	readFile(inputData,fileName);
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
-	copyList(inputData, FCFSList);
-	FCFS(FCFSList); 
-	freeList(FCFSList);
+	//copyList(inputData, FCFSList);
+	FCFS(inputData); 
+	//freeList(FCFSList);
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
-	copyList(inputData, SRTList);
+	//copyList(inputData, SRTList);
 	//SRT(SRTList);
 	freeList(SRTList);
 	////////////RR////////////////////
 	list<Process*> RRList;
-	copyList(inputData, RRList);
+	//copyList(inputData, RRList);
 	//RR(RRList);
-	freeList(RRList);
+	//freeList(RRList);
 	
 	//this will delete all the data from the list<Process*> 
 	freeList(inputData);
@@ -107,7 +107,6 @@ void FCFS(list<Process*> input)
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
-	bool loading;
 	cout << "time " << counter << "ms: Simulator started for FCFS [Q <empty>]" << endl;
 	//priority q for all arriving process
 	list<Process*> queue;

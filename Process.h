@@ -4,6 +4,10 @@ public:
     Process();
     Process(string Id, int ArrivalTime, int BurstTime, int NumBurst, int IoTime);
     Process(const Process& p2);
+	~Process()
+	{
+	
+	}
 	string id;
 	int arrivalTime;
 	int burstTime;
