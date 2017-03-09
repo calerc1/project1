@@ -312,7 +312,7 @@ void RR(list<Process*> input)
 		//updateIOQueue(ioQueue);
 		//officially add all processes to queue
 		checkIoWait(i, ioQueue, queue);
-		#if 0
+		#if 1
 		sort(toAdd.begin(),toAdd.end(), id_sort());
 		#endif
 		while(!toAdd.empty()){
