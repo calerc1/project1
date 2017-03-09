@@ -23,9 +23,9 @@ void SRT(list<Process*> &input);
 void RR(list<Process*> input);
 void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime);
 string printQueue(const list<Process*> &queue);
-void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart);
+void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart, list<Process*> &input);
 void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
-void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart);
+void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
 
 /////////////////////////MAIN///////////////////////////////////
 
@@ -118,7 +118,7 @@ void FCFS(list<Process*> input)
 		if(current != NULL && ((counter-counterStart) == (*current).burstTime))
 		{
 			//Checks that the current Process is not expiered		
-			checkCurrent(queue,ioWait, current, counter , counterStart);	
+			checkCurrent(queue, ioWait, current, counter , counterStart, input);
 		}
 
 		else if(current  == NULL)
@@ -126,6 +126,7 @@ void FCFS(list<Process*> input)
 			
 			if(!queue.empty())
 			{
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				counterStart = counter;	
 				queue.pop_front();
@@ -271,14 +272,20 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 
 
 
-void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart)
-{
+void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart, list<Process*> &input);
+{//this function is used in FCFS to handle the case where the current process is done and switching to ioWait or terminating the is handled
+
+		
 		(*current).numBurst--;
-		current->print();
 		if(current->numBurst > 0 )
+		// if the process has cpu burst remaining there are two options 
+		// 1. there is another process in the ready queue that can be worked on
+		// 2. there are no processes left in the cpu so the current process is set to NULL such that the current program can wait for another process to come out of io time or there are so process left and the program ends
 		{
 			current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime));
 			ioWait.push_back(current);
+			loadCPU(counter, queue, ioWait, current, counterStart, input);
+				
 			
 
 			cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
@@ -299,6 +306,7 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			
 		}
 		else
+		//if the process has no cpu burst remaining the process is terminated or set to null if no other process are on the ready queue
 		{
 			cout<< "time " << counter << "ms: Process " << current->id <<  "terminated " << printQueue(queue) << endl;
 			
@@ -319,7 +327,15 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 		}
 
 }
-void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart)
+void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart,list<Process*> &input)
 {
+	int delay;
+
+	for(delay = 0; delay < 3; delay++)
+	{
+		checkIoWait(counter, ioWait, queue);
+		checkArrivals(input,queue,counter);
+		counter++;
+	}
 	
 }
