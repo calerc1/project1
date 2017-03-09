@@ -230,19 +230,15 @@ void RR(list<Process*> input)
 				ts_expire = i + t_slice;
 				start = true;
 			}
-		}
-
-
-
-
-		
+		}		
 		//if working on current
 		#if 1
 		//premption occurs due to time slice (initiate context switch)
 		if(!cs && current != NULL && ts_expire == i){
 			if(queue.empty()){
 				cout << "time " << i << "ms: Time slice expired; no preemption because ready queue is empty [Q <empty>]" << endl;
-				(*current).burstRemain = (*current).burstTime - t_slice;
+				--(*current).burstRemain; //= (*current).burstTime - t_slice;
+				ts_expire = i + t_slice;
 			}
 			else{
 				--(*current).burstRemain;
@@ -264,12 +260,9 @@ void RR(list<Process*> input)
 				--(*current).burstRemain;
 			}
 		}
-
 		//process completes CPU burst/terminates
 		if( !cs && current != NULL && (*current).burstRemain == 0 ){
 			//set burst remain to I/O time and add to I/O queue
-
-		
 			(*current).ioWaitEnd = i + 3 + (*current).ioTime;
 			//Process has more burst remaining
 			if( (*current).numBurst > 1 ){
@@ -277,7 +270,7 @@ void RR(list<Process*> input)
 				if((*current).numBurst == 1){
 				cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go " << printQueue(queue) << endl;
 				}
-				else {
+				else{
 					cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go " << printQueue(queue) << endl;
 
 				}
@@ -295,31 +288,22 @@ void RR(list<Process*> input)
 			cs = true;
 			cs_counter = 0;
 		}
-		
-
 		//Handle print statements for newArrival processes
 		while(!newArrivals.empty()){
 			itr = newArrivals.begin();
 			newArrivals.pop_front();
 			//toAdd.push_back(*itr);
 			queue.push_back(*itr);
-			cout << "time " << i << "ms: Process " << (*itr)->id <<" arrived and added to ready queue " << printQueue(queue) << endl;
+			cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
 		}
-
-
-
-
-
 	#if 0
-		if(i == 500){
+		if(i == 4000){
 			return;
 		}
 	#endif
 		if(cs){
 			++cs_counter;
 		}
-
-
 		//updateIOQueue(ioQueue);
 		//officially add all processes to queue
 		checkIoWait(i, ioQueue, queue);
@@ -334,9 +318,6 @@ void RR(list<Process*> input)
 			toAdd.pop_front();
 			queue.push_back(*itr);
 		}
-
-
-
 		//start condition (count from 3 to 6)
 		if(!queue.empty() && current == NULL && p_cs == NULL && cs == false){
 			p_cs = *queue.begin();
@@ -344,14 +325,11 @@ void RR(list<Process*> input)
 			cs = true;
 			cs_counter = 4;
 		}
-
-
-		#if 1
+		//End Condition
 		if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL && !cs){
 			printf("time %dms: Simulator ended for RR\n", i);
 			return;
 		}
-		#endif
 		++i;
 	}
 	#endif
@@ -521,7 +499,6 @@ void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Proces
 		checkArrivals(input,queue,counter, 1);
 		counter++;
 	}
-	
 }
 
 
