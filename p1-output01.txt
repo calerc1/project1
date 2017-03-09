@@ -1,5 +1,3 @@
-time 0ms: Simulator started for FCFS [Q <empty>]
-time 0ms: Process A arrived and added to ready queue [Q A]
 time 0ms: Process B arrived and added to ready queue [Q A B]
 time 3ms: Process A started using the CPU [Q B]
 time 171ms: Process A completed a CPU burst; 4 bursts to go [Q B]

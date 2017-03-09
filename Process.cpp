@@ -1,6 +1,6 @@
-#include<string>
 #include<iostream>
 #include<list>
+#include<string>
 #include"Process.h"
 using namespace std;
 /////////CONSTRUCTORS/////////////////////
@@ -13,7 +13,6 @@ Process::Process()
 	numBurst = 0;
 	ioTime = 0;
 	burstRemain = burstTime;
-	ioWaitRemain = 0;
 }
 
 
@@ -60,6 +59,8 @@ struct id_sort : public std::binary_function<Process*, Process*, bool>
 bool compare_id(const Process*& p1, const Process*& p2)
 {
    return (*p1).id < (*p2).id;
+	//cout << this->id << " | " << this->arrivalTime << " | " << this->burstTime << " | " << this->numBurst << " | " << this->ioTime << " | " << this->ioWaitEnd << " |"  << endl;
+
 }
 
 //list<Process*>::iterator&
