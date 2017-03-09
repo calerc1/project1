@@ -220,9 +220,9 @@ void RR(list<Process*> input)
 			}
 			//}
 			if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL){
-			printf("time %dms: Simulator ended for RR\n", i);
-			return;
-		}	
+				printf("time %dms: Simulator ended for RR\n", i);
+				return;
+			}	
 		}
 		//if context switch fully completes print statement and start operating on CPU process
 		if(cs && cs_counter == 6){
@@ -241,18 +241,27 @@ void RR(list<Process*> input)
 				ts_expire = i + t_slice;
 				start = true;
 			}
-		}		
-		//if working on current
-		#if 1
-		//premption occurs due to time slice (initiate context switch)
-		if(!cs && current != NULL && ts_expire == i){
-			if(queue.empty()){
-				cout << "time " << i << "ms: Time slice expired; no preemption because ready queue is empty [Q <empty>]" << endl;
-				--(*current).burstRemain; //= (*current).burstTime - t_slice;
-				ts_expire = i + t_slice;
+		}	
+		//standard CPU operation on current.  --burstremain
+		if(!cs && current != NULL){
+			if(start){
+				start = false;
 			}
 			else{
 				--(*current).burstRemain;
+			}
+		}	
+		//if working on current
+		#if 1
+		//premption occurs due to time slice (initiate context switch)
+		if(!cs && current != NULL && ts_expire == i && (*current).burstRemain != 0){
+			if(queue.empty()){
+				cout << "time " << i << "ms: Time slice expired; no preemption because ready queue is empty [Q <empty>]" << endl;
+				//--(*current).burstRemain; //= (*current).burstTime - t_slice;
+				ts_expire = i + t_slice;
+			}
+			else{
+				//--(*current).burstRemain;
 				cout << "time " << i << "ms: Time slice expired; process " << (*current).id <<  " preempted with " << (*current).burstRemain << "ms to go " << printQueue (queue) << endl;
 				cs = true;
 				cs_counter = 0;
@@ -262,15 +271,8 @@ void RR(list<Process*> input)
 			}
 		}
 		#endif
-		//standard CPU operation on current.  --burstremain
-		else if(!cs && current != NULL){
-			if(start){
-				start = false;
-			}
-			else{
-				--(*current).burstRemain;
-			}
-		}
+		
+		
 		//process completes CPU burst/terminates
 		if( !cs && current != NULL && (*current).burstRemain == 0 ){
 			//set burst remain to I/O time and add to I/O queue
@@ -279,7 +281,7 @@ void RR(list<Process*> input)
 			if( (*current).numBurst > 1 ){
 				--(*current).numBurst;
 				if((*current).numBurst == 1){
-				cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go " << printQueue(queue) << endl;
+					cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go " << printQueue(queue) << endl;
 				}
 				else{
 					cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go " << printQueue(queue) << endl;
@@ -314,7 +316,7 @@ void RR(list<Process*> input)
 			
 		}
 	#if 0
-		if(i == 4000){
+		if(i == 3500){
 			return;
 		}
 	#endif
