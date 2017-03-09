@@ -475,10 +475,6 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 		{
 			cout<< "time " << counter << "ms: Process " << current->id <<  " terminated " << printQueue(queue) << endl;
 			loadCPU(counter, queue, ioWait, current, counterStart,input);
-			Process* tmp = current;
-			current =NULL;
-			delete(tmp);
-			tmp =NULL;
 			
 			
 			if(!queue.empty())
