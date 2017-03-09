@@ -1,5 +1,6 @@
 #include<string>
 #include<iostream>
+#include<list>
 #include"Process.h"
 using namespace std;
 /////////CONSTRUCTORS/////////////////////
@@ -43,14 +44,25 @@ bool compare_arrivalTime(const Process& p1, const Process& p2)
    if (p1.arrivalTime != p2.arrivalTime) return p1.arrivalTime < p2.arrivalTime;
    return p1.id < p2.id;
 }
-
-bool compare_id(const Process& p1, const Process& p2)
-{
-   return p1.id < p2.id;
-}
-
-
 void Process::print()
 {
 	cout << this->id << " | " << this->arrivalTime << " | " << this->burstTime << " | " << this->numBurst << " | " << this->ioTime << " | " << endl;
 }
+
+// function object
+struct id_sort : public std::binary_function<Process*, Process*, bool>
+{
+	bool operator()(const Process*& a, const Process*& b)
+	{
+		return (*a).id < (*b).id;
+	}
+};
+bool compare_id(const Process*& p1, const Process*& p2)
+{
+   return (*p1).id < (*p2).id;
+}
+
+//list<Process*>::iterator&
+
+
+
