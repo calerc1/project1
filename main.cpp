@@ -21,13 +21,15 @@ void parseLine(list<Process*> &input, string &line);
 void FCFS(list<Process*> input);
 void SRT(list<Process*> &input);
 void RR(list<Process*> input);
-void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime);
+void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, int fcfs);
 string printQueue(const list<Process*> &queue);
 //bool compare_id(const Process& p1, const Process& p2);
 void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter ,int &counterStart, list<Process*> &input);
 void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
 void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
-void updateIOQueue(list<Process*>& io);
+void copyList(list<Process*> &queue, list<Process*> &copyArray);
+void freeList(list<Process*> & toFree);
+
 
 /////////////////////////MAIN///////////////////////////////////
 
@@ -42,15 +44,23 @@ int main(int argc, char* argv[])
 	char* fileName = argv[1];
 	readFile(inputData,fileName);
 	//////////////FCFS//////////////////
-	//FCFS(inputData); 
-	//SRT(inputData);
-	RR(inputData);
+	list<Process*> FCFSList;
+	copyList(inputData, FCFSList);
+	FCFS(FCFSList); 
+	freeList(FCFSList);
+	/////////////SRT///////////////////
+	list<Process*> SRTList;
+	copyList(inputData, SRTList);
+	//SRT(SRTList);
+	freeList(SRTList);
+	////////////RR////////////////////
+	list<Process*> RRList;
+	copyList(inputData, RRList);
+	//RR(RRList);
+	freeList(RRList);
 	
 	//this will delete all the data from the list<Process*> 
-	list<Process*>::iterator iterator;
-	for (iterator = inputData.begin(); iterator != inputData.end(); ++iterator) {
-		delete(*iterator);
-	}	
+	freeList(inputData);
   	return 1;
 }
 
@@ -91,10 +101,9 @@ void parseLine(list<Process*> &input , string &line)
 	input.push_back(node);
 }
 
-
 void FCFS(list<Process*> input)
 {
-	#if 0 
+	#if 1 
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
@@ -108,11 +117,11 @@ void FCFS(list<Process*> input)
 
 	string debug;
 	//need to have something on the queue in able for the loop to execute		
-	checkArrivals(input,queue, counter);
+	checkArrivals(input,queue, counter, 1);
 	while(queue.size() > 0 || current != NULL || ioWait.size() > 0)
 	{
 		//checks for any new arrivals, and puts them in the back of the queue
-		checkArrivals(input,queue, counter);
+		checkArrivals(input,queue, counter, 1);
 		//checks for proceces that have expired in the ioWait queue to put in the ready queue
 		checkIoWait(counter, ioWait, queue);
 
@@ -125,9 +134,10 @@ void FCFS(list<Process*> input)
 
 		else if(current  == NULL)
 		{
-			
+
 			if(!queue.empty())
 			{
+				//load works I think
 				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				counterStart = counter;	
@@ -144,6 +154,7 @@ void FCFS(list<Process*> input)
 		//checks that no process with io wait 0ms was added to the queue
 		counter++;
 	}
+	cout << "time "  << (counter + 2) << "ms: Simulator ended for FCFS" << endl;
 	#endif
 }
 
@@ -154,7 +165,7 @@ void SRT(list<Process*> &input)
 
 void RR(list<Process*> input)
 {	
-	#if 1
+	#if 1 
 	//priority q for all arriving process
 	list<Process*> queue;
 	list<Process*> newArrivals;
@@ -173,7 +184,7 @@ void RR(list<Process*> input)
 	cout << "time " << i << "ms: Simulator started for RR " << printQueue(queue) << endl;
 	while(1){
 		//cout << "time " << i << endl;
-		checkArrivals(input, newArrivals, i);
+		checkArrivals(input, newArrivals, i, 0);
 		if(cs && cs_counter == t_cs/2){
 			//if(!queue.empty()){
 			if( p_cs!= NULL ){
@@ -277,6 +288,7 @@ void RR(list<Process*> input)
 			}
 			//Process has no more bursts remaining
 			else{
+				
 				cout << "time " << i <<"ms: Process " << (*current).id << " terminated " << printQueue(queue) << endl;
 				p_cs = NULL;
 			}
@@ -345,7 +357,7 @@ void RR(list<Process*> input)
 	}
 	#endif
 }
-void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
+void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, int fcfs){
 	#if 1
 		if( input.empty() || ((*input.begin())->arrivalTime != currTime) )
 		return;
@@ -357,7 +369,10 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime){
 	{
 		if( (*itr)->arrivalTime == currTime ){
 			toAdd.push_back(*itr);
-			//cout << "time " << currTime << "ms: Process " << (*(*(itr))).id << " arrived and added to ready queue " << printQueue(toAdd) << endl;
+			if(fcfs)
+			{
+			cout << "time " << currTime << "ms: Process " << (*(*(itr))).id << " arrived and added to ready queue " << printQueue(toAdd) << endl;
+			}
 		}
 		else if( (*itr)->arrivalTime > currTime )
 		{
@@ -401,6 +416,7 @@ string printQueue(const list<Process*> &queue){
 void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 {
 	list<Process*>::iterator iterator = ioWait.begin();
+	//loops thru the list od ioWait Processes
 	while (iterator != ioWait.end())
 	{
 		if((*iterator)->ioWaitEnd == counter)
@@ -423,7 +439,7 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue)
 			else
 			{
 				cout << (*iterator)->id << " is done and has been removed from precesses" << endl;	
-				ioWait.erase(iterator++);  // alternatively, i = items.erase(i);
+				ioWait.erase(iterator++); 
 
 			}
 		}
@@ -446,10 +462,8 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 		// 1. there is another process in the ready queue that can be worked on
 		// 2. there are no processes left in the cpu so the current process is set to NULL such that the current program can wait for another process to come out of io time or there are so process left and the program ends
 		{
-			current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime));
+			current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime + 3));
 			ioWait.push_back(current);
-			loadCPU(counter, queue, ioWait, current, counterStart, input);
-				
 			
 			if((*current).numBurst == 1){
 				cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go" << printQueue(queue) << endl;
@@ -458,10 +472,12 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 				cout << "time " << counter << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go" << printQueue(queue) << endl;
 
 			}
+			loadCPU(counter, queue, ioWait, current, counterStart, input);
 			cout << "time " << counter << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
 
 			if(!queue.empty())
 			{	
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				queue.pop_front();	
 				counterStart = counter;
@@ -477,10 +493,13 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 		else
 		//if the process has no cpu burst remaining the process is terminated or set to null if no other process are on the ready queue
 		{
-			cout<< "time " << counter << "ms: Process " << current->id <<  "terminated " << printQueue(queue) << endl;
+			cout<< "time " << counter << "ms: Process " << current->id <<  " terminated " << printQueue(queue) << endl;
+			loadCPU(counter, queue, ioWait, current, counterStart,input);
+			
 			
 			if(!queue.empty())
 			{
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				queue.pop_front();
 				counterStart = counter;
@@ -490,9 +509,6 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			{
 				current  = NULL;
 			}
-			
-
-
 		}
 
 }
@@ -503,26 +519,32 @@ void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Proces
 	for(delay = 0; delay < 3; delay++)
 	{
 		checkIoWait(counter, ioWait, queue);
-		checkArrivals(input,queue,counter);
+		checkArrivals(input,queue,counter, 1);
 		counter++;
 	}
 	
 }
-void updateIOQueue(list<Process*>& io){
-	list<Process*>::iterator itr = io.begin();
-	for(; itr != io.end(); ++itr ){
-		--(*itr)->burstRemain;
+
+
+void copyList(list<Process*> &queue, list<Process*> &copyArray)
+{
+	//will be used to make a copy list of the Processes
+	list<Process*>::iterator itr = queue.begin();
+	Process* copy;
+	while(itr != queue.end())
+	{
+		copy = new Process((*(*itr)));
+		copyArray.push_back(copy);
+		++itr;
 	}
+	
 }
 
-
-
-
-
-
-
-
-
-
-
-
+void freeList(list<Process*> & toFree)
+{
+	//used to free a list of objects from the heap
+	list<Process*>::iterator iterator;
+	for (iterator = toFree.begin(); iterator != toFree.end(); ++iterator) {
+		delete(*iterator);
+	}	
+}
