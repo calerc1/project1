@@ -181,6 +181,7 @@ void RR(list<Process*> input)
 	list<Process*> newArrivals;
 	list<Process*> toAdd;
 	list<Process*> ioQueue;
+	list<Process*> finished;
 	Process* current = NULL;
 	Process* p_cs = NULL;  //the process to be in the context switch
 	//current should = NULL while cs has a value
@@ -299,6 +300,7 @@ void RR(list<Process*> input)
 				Process* temp = current;
 				current = NULL;
 				delete(temp);
+				
 				p_cs = NULL;
 			}
 			current = NULL;
