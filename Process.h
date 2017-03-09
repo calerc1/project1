@@ -19,6 +19,7 @@ public:
 	int burstRemain;
 	int ioWaitEnd;
 	string type;
+	int timeTerminated;
 	void print();
 };
 
