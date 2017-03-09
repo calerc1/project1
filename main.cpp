@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 	//freeList(RRList);
 
 	//this will delete all the data from the list<Process*> 
-	freeList(inputData);
+	//freeList(inputData);
   	return 1;
 }
 
