@@ -28,7 +28,7 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
 void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
 void copyList(list<Process*> &queue, list<Process*> &copyArray);
-void freeList(list<Process*> & toFree);
+void freeList(list<Process*> &toFree);
 
 
 /////////////////////////MAIN///////////////////////////////////
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 	freeList(FCFSList);
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
-	copyList(inputData, SRTList);
+	//copyList(inputData, SRTList);
 	//SRT(SRTList);
 	freeList(SRTList);
 	////////////RR////////////////////
