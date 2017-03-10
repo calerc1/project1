@@ -19,7 +19,10 @@ public:
 	int burstRemain;
 	int ioWaitEnd;
 	string type;
+	//vars for statistics
 	int timeTerminated;
+	int waitStart;
+	//FUCTIONS//
 	void print();
 };
 

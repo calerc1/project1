@@ -18,7 +18,7 @@ using namespace std;
 
 void readFile(list<Process*> &input, char* fileName);
 void parseLine(list<Process*> &input, string &line);
-void FCFS(list<Process*> input);
+void FCFS(list<Process*> input, char* outputFile);
 void SRT(list<Process*> &input);
 void RR(list<Process*> input);
 void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, int fcfs);
@@ -29,6 +29,7 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
 void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
 void copyList(list<Process*> &queue, list<Process*> &copyArray);
 void freeList(list<Process*> &toFree);
+void printStatistics(char* fileName, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch);
 
 
 // function object
@@ -51,11 +52,12 @@ int main(int argc, char* argv[])
 	//reading file onto a vector
 	list<Process*> inputData;
 	char* fileName = argv[1];
+	char* outputFile = argv[2];
 	readFile(inputData,fileName);
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
 	copyList(inputData, FCFSList);
-	FCFS(FCFSList); 
+	FCFS(FCFSList, outputFile); 
 	freeList(FCFSList);
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
@@ -112,13 +114,12 @@ void parseLine(list<Process*> &input , string &line)
 	input.push_back(node);
 }
 
-void FCFS(list<Process*> input)
+void FCFS(list<Process*> input, char* outputFile)
 {
 	#if 1 
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
-	int totalProcess = input.size();
 	float averageBurst = 0;
 	float averageWait = 0;
 	float averageTurnaround = 0;
@@ -166,6 +167,7 @@ void FCFS(list<Process*> input)
 	while(queue.size() > 0 || current != NULL || ioWait.size() > 0)
 	{
 		//checks for any new arrivals, and puts them in the back of the queue
+		
 		checkArrivals(input,toAdd, counter, 1);
 		//checks for proceces that have expired in the ioWait queue to put in the ready queue
 		checkIoWait(counter, ioWait, toAdd);
@@ -203,10 +205,10 @@ void FCFS(list<Process*> input)
 			if(!queue.empty())
 			{
 				//load works I think
-				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
-				counterStart = counter;	
 				queue.pop_front();
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
+				counterStart = counter;	
 				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 			}		
 		}
@@ -217,16 +219,14 @@ void FCFS(list<Process*> input)
 		}
 		#endif
 		//checks that no process with io wait 0ms was added to the queue
+		averageWait += queue.size();
+		
 		counter++;
 	}
+	
 	cout << "time "  << (counter + 2) << "ms: Simulator ended for FCFS" << endl;
 	#endif
-	cout << "Algorithm FCFS" << endl;
-	cout << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
-	cout << "-- average wait time: " << averageWait << " ms" << endl;
-	cout << "-- average turnaround time: " <<  averageTurnaround << " ms" << endl;
-	cout << "-- total number of context switches: " << numContextSwitch << endl;
-	cout << "-- total number of preemptions: " << totalPreemptions << endl;
+	printStatistics(outputFile, averageWait, averageBurst, averageTurnaround, totalPreemptions, numContextSwitch);
 }
 
 void SRT(list<Process*> &input)
@@ -547,12 +547,13 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			}
 			loadCPU(counter, queue, ioWait, current, counterStart, input);
 			cout << "time " << counter - 3 << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
+			cout << "here" << endl;
 
 			if(!queue.empty())
 			{	
-				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				queue.pop_front();	
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				counterStart = counter;
 				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 				
@@ -570,11 +571,12 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			loadCPU(counter, queue, ioWait, current, counterStart,input);
 			
 			
+			
 			if(!queue.empty())
 			{
-				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				queue.pop_front();
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				counterStart = counter;
 				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 			}	
@@ -621,3 +623,15 @@ void freeList(list<Process*> & toFree)
 	}	
 }
 
+void printStatistics(char* fileName, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch)
+{
+	ofstream file;
+	file.open(fileName);
+	file << "Algorithm FCFS" << endl;
+	file << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
+	file << "-- average wait time: " << averageWait << " ms" << endl;
+	file << "-- average turnaround time: " <<  averageTurnaround << " ms" << endl;
+	file << "-- total number of context switches: " << numContextSwitch << endl;
+	file << "-- total number of preemptions: " << totalPreemptions << endl;
+	file.close();
+}
