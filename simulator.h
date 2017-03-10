@@ -18,11 +18,18 @@ public:
 	{
 		if (p1->burstTime == p2->burstTime)
 		{
-			return (p1->arrivalTime < p2->arrivalTime);
+			if (p1->arrivalTime > p2->arrivalTime)
+			{
+				return true;
+			}
+			else
+			{
+				return (p1->id > p2->id);
+			}
 		}
 		else
 		{
-			return (p1->burstTime < p2->burstTime);
+			return (p1->burstTime > p2->burstTime);
 		}
 	}
 };
@@ -73,7 +80,6 @@ public:
 	virtual std::queue<Process*> schedule(std::list<Process*> &pslist) = 0;
 protected:
 	std::string strAlgorithm;
-private:
 	Stats stats;
 };
 
@@ -86,7 +92,6 @@ public:
 		int start_time = 0;
 		int finish_time = 0;
 		Process* p, *scheduled, remaining;
-		Stats stats = this->GetStats();
 		std::queue<Process*> retval;
 		std::map<std::string, int> start_times;
 		std::map<std::string, int> finish_times;
@@ -100,7 +105,7 @@ public:
 			while (!pslist.empty() && pslist.front()->arrivalTime <= finish_time)
 			{
 				ready_queue.push(pslist.front());
-				std::cout << "time " << pslist.front()->arrivalTime << "ms: Process " << pslist.front()->id
+				std::cout << "time " << finish_time << "ms: Process " << pslist.front()->id
 					<< " arrived and added to ready queue " << PQ_Contents(ready_queue) << "\n";
 				pslist.pop_front();
 			}
@@ -122,6 +127,7 @@ public:
 			{
 				p = ready_queue.top();
 				ready_queue.pop();
+
 			}
 			else
 			{
@@ -156,6 +162,7 @@ public:
 				remaining = *p;
 				remaining.burstTime--;
 				waiting_queue.push(&remaining);
+				finish_times.insert(std::make_pair(remaining.id, finish_time));
 			}
 			else // process terminates
 			{
