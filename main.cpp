@@ -18,9 +18,9 @@ using namespace std;
 
 void readFile(list<Process*> &input, char* fileName);
 void parseLine(list<Process*> &input, string &line);
-void FCFS(list<Process*> input);
+void FCFS(list<Process*> input, char* outputFile);
 void SRT(list<Process*> &input);
-void RR(list<Process*> input);
+void RR(list<Process*> input, char* outputFile);
 void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, int fcfs);
 string printQueue(const list<Process*> &queue);
 //bool compare_id(const Process& p1, const Process& p2);
@@ -29,7 +29,9 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
 void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
 void copyList(list<Process*> &queue, list<Process*> &copyArray);
 void freeList(list<Process*> &toFree);
-void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts /*, filename*/ );
+void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts, char* fileName );
+void printStatistics(char* fileName, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch);
+
 
 
 // function object
@@ -52,21 +54,24 @@ int main(int argc, char* argv[])
 	//reading file onto a vector
 	list<Process*> inputData;
 	char* fileName = argv[1];
+	char* outputFile = argv[2];
 	readFile(inputData,fileName);
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
 	copyList(inputData, FCFSList);
-	//FCFS(FCFSList); 
+	FCFS(FCFSList, outputFile); 
 	freeList(FCFSList);
+	cout << endl <<endl;
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
 	//copyList(inputData, SRTList);
 	//SRT(SRTList);
 	freeList(SRTList);
+	cout << endl <<endl;
 	////////////RR////////////////////
 	list<Process*> RRList;
 	copyList(inputData, RRList);
-	RR(RRList);
+	RR(RRList, outputFile);
 	//freeList(RRList);
 
 	//this will delete all the data from the list<Process*> 
@@ -113,13 +118,12 @@ void parseLine(list<Process*> &input , string &line)
 	input.push_back(node);
 }
 
-void FCFS(list<Process*> input)
+void FCFS(list<Process*> input, char* outputFile)
 {
 	#if 1 
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
-	
 	float averageBurst = 0;
 	float averageWait = 0;
 	float averageTurnaround = 0;
@@ -138,18 +142,59 @@ void FCFS(list<Process*> input)
 	//priority q for all arriving process
 	list<Process*> queue;
 	list<Process*> ioWait;
+	list<Process*> toAdd;
+	list<Process*>::iterator itr2;
 	//the first process to arrive
 	Process* current =	NULL; 
 
 	string debug;
 	//need to have something on the queue in able for the loop to execute		
-	checkArrivals(input,queue, counter, 1);
+	checkArrivals(input,toAdd, counter, 1);
+	toAdd.sort(id_sort());
+	while(!toAdd.empty())
+	{
+		//cout << "here" << endl;
+		itr2 = toAdd.begin();
+		queue.push_back(*itr2);
+		if((*itr2)->type == "I/O"){
+			cout << "time " << counter << "ms: Process " << (*itr2)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl;  
+		}
+		else if( (*itr2)->type == "input" ){
+			cout << "time " << counter << "ms: Process " << (*itr2)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+		}
+		else if( (*itr2)->type == "" ){
+
+		}
+		(*itr2)->type = "";
+		toAdd.pop_front();
+	}
 	while(queue.size() > 0 || current != NULL || ioWait.size() > 0)
 	{
 		//checks for any new arrivals, and puts them in the back of the queue
-		checkArrivals(input,queue, counter, 1);
+		
+		checkArrivals(input,toAdd, counter, 1);
 		//checks for proceces that have expired in the ioWait queue to put in the ready queue
-		checkIoWait(counter, ioWait, queue);
+		checkIoWait(counter, ioWait, toAdd);
+		toAdd.sort(id_sort());
+		while(!toAdd.empty())
+		{
+			//cout << "here" << endl;
+			itr2 = toAdd.begin();
+			queue.push_back(*itr2);
+			#if 1
+			if((*itr2)->type == "I/O"){
+				cout << "time " << counter << "ms: Process " << (*itr2)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl;  
+			}
+			else if( (*itr2)->type == "input" ){
+				cout << "time " << counter << "ms: Process " << (*itr2)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			}
+			else if( (*itr2)->type == "" ){
+
+			}
+			#endif
+			(*itr2)->type = "";
+			toAdd.pop_front();
+		}
 
 		//checks that the current Process that is being handled has not expiered
 		if(current != NULL && ((counter-counterStart) == (*current).burstTime))
@@ -164,10 +209,10 @@ void FCFS(list<Process*> input)
 			if(!queue.empty())
 			{
 				//load works I think
-				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
-				counterStart = counter;	
 				queue.pop_front();
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
+				counterStart = counter;	
 				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 			}		
 		}
@@ -178,16 +223,14 @@ void FCFS(list<Process*> input)
 		}
 		#endif
 		//checks that no process with io wait 0ms was added to the queue
+		averageWait += queue.size();
+		
 		counter++;
 	}
+	
 	cout << "time "  << (counter + 2) << "ms: Simulator ended for FCFS" << endl;
 	#endif
-	cout << "Algorithm FCFS" << endl;
-	cout << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
-	cout << "-- average wait time: " << averageWait << " ms" << endl;
-	cout << "-- average turnaround time: " <<  averageTurnaround << " ms" << endl;
-	cout << "-- total number of context switches: " << numContextSwitch << endl;
-	cout << "-- total number of preemptions: " << totalPreemptions << endl;
+	printStatistics(outputFile, averageWait, averageBurst, averageTurnaround, totalPreemptions, numContextSwitch);
 }
 
 void SRT(list<Process*> &input)
@@ -195,7 +238,7 @@ void SRT(list<Process*> &input)
 	
 }
 
-void RR(list<Process*> input)
+void RR(list<Process*> input, char* outputFile)
 {	
 	#if 1 
 	//priority q for all arriving process
@@ -258,7 +301,7 @@ void RR(list<Process*> input)
 			//}
 			if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL){
 				printf("time %dms: Simulator ended for RR\n", i);
-				resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts);
+				resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, outputFile);
 				return;
 			}	
 		}
@@ -430,7 +473,7 @@ void RR(list<Process*> input)
 		//End Condition
 		if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL && !cs){
 			printf("time %dms: Simulator ended for RR\n", i);
-			resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts);
+			resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, outputFile);
 			return;
 		}
 		++i;
@@ -449,9 +492,11 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, i
 	{
 		if( (*itr)->arrivalTime == currTime ){
 			toAdd.push_back(*itr);
+			(*itr)->type = "input";
 			if(fcfs)
 			{
-			cout << "time " << currTime << "ms: Process " << (*(*(itr))).id << " arrived and added to ready queue " << printQueue(toAdd) << endl;
+			
+			//cout << "time " << currTime << "ms: Process " << (*(*(itr))).id << " arrived and added to ready queue " << printQueue(toAdd) << endl;
 			}
 		}
 		else if( (*itr)->arrivalTime > currTime )
@@ -556,12 +601,13 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			}
 			loadCPU(counter, queue, ioWait, current, counterStart, input);
 			cout << "time " << counter - 3 << "ms: Process " <<  (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << printQueue(queue) << endl;                                   
+			//cout << "here" << endl;
 
 			if(!queue.empty())
 			{	
-				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				queue.pop_front();	
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				counterStart = counter;
 				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 				
@@ -579,11 +625,12 @@ void checkCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &curre
 			loadCPU(counter, queue, ioWait, current, counterStart,input);
 			
 			
+			
 			if(!queue.empty())
 			{
-				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				current = *queue.begin();
 				queue.pop_front();
+				loadCPU(counter, queue, ioWait, current, counterStart,input);
 				counterStart = counter;
 				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << printQueue(queue) << endl;
 			}	
@@ -629,10 +676,11 @@ void freeList(list<Process*> & toFree)
 		delete(*iterator);
 	}	
 }
-void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts /*, filename*/ ){
-	double averageBurst = 0;
-	double averageTurnaround = 0;
-	double averageWait = 0;
+
+void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts , char* fileName ){
+	float averageBurst = 0;
+	float averageTurnaround = 0;
+	float averageWait = 0;
 
 	list<Process*>::iterator itr = finished.begin();
 	while(itr != finished.end())
@@ -643,9 +691,10 @@ void resultsRR(list<Process*> &finished, int preemptions, int context_switches, 
 		++itr;
 	}
 	averageBurst /= totBursts;
-	averageTurnaround = (double)totalTurnaround / totBursts;
-	averageWait = (double)totalWait / totBursts;
+	averageTurnaround = (float)totalTurnaround / totBursts;
+	averageWait = (float)totalWait / totBursts;
 	//averageWait = totalWait - (context_switches + preemptions)*6;	
+	#if 0
 	cout << "Algorithm RR" << endl;
 	cout << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
 	cout << "-- average wait time: " << averageWait << " ms" << endl;
@@ -653,22 +702,23 @@ void resultsRR(list<Process*> &finished, int preemptions, int context_switches, 
 	cout << "-- total number of context switches: " << context_switches << endl;
 	cout << "-- total number of preemptions: " << preemptions << endl;
 	//cout << "-- total number of bursts: " << totBursts << endl;
+	#endif
+	printStatistics(fileName, averageWait, averageBurst, averageTurnaround, preemptions, context_switches);
+	freeList(finished);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void printStatistics(char* fileName, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch)
+{
+	ofstream file;
+	file.open(fileName);
+	file << "Algorithm FCFS" << endl;
+	file << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
+	file << "-- average wait time: " << averageWait << " ms" << endl;
+	file << "-- average turnaround time: " <<  averageTurnaround << " ms" << endl;
+	file << "-- total number of context switches: " << numContextSwitch << endl;
+	file << "-- total number of preemptions: " << totalPreemptions << endl;
+	file.close();
+}
 
 
 

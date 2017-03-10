@@ -20,10 +20,14 @@ public:
 	int burstRemain;
 	int ioWaitEnd;
 	string type;
+
 	int turnaroundArrival;
-	int timeTerminated;
 	int cs_switches;
 	int ioReturn;
+	//vars for statistics
+	int timeTerminated;
+	int waitStart;
+	//FUCTIONS//
 	void print();
 };
 
