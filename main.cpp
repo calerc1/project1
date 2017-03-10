@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
 	copyList(inputData, FCFSList);
-	//FCFS(FCFSList); 
+	FCFS(FCFSList); 
 	freeList(FCFSList);
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
@@ -118,7 +118,7 @@ void FCFS(list<Process*> input)
 	//All time gone by counter
 	int counter = 0;
 	int counterStart = 0;
-	
+	int totalProcess = input.size();
 	float averageBurst = 0;
 	float averageWait = 0;
 	float averageTurnaround = 0;
@@ -137,18 +137,58 @@ void FCFS(list<Process*> input)
 	//priority q for all arriving process
 	list<Process*> queue;
 	list<Process*> ioWait;
+	list<Process*> toAdd;
+	list<Process*>::iterator itr2;
 	//the first process to arrive
 	Process* current =	NULL; 
 
 	string debug;
 	//need to have something on the queue in able for the loop to execute		
-	checkArrivals(input,queue, counter, 1);
+	checkArrivals(input,toAdd, counter, 1);
+	toAdd.sort(id_sort());
+	while(!toAdd.empty())
+	{
+		//cout << "here" << endl;
+		itr2 = toAdd.begin();
+		queue.push_back(*itr2);
+		if((*itr2)->type == "I/O"){
+			cout << "time " << counter << "ms: Process " << (*itr2)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl;  
+		}
+		else if( (*itr2)->type == "input" ){
+			cout << "time " << counter << "ms: Process " << (*itr2)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+		}
+		else if( (*itr2)->type == "" ){
+
+		}
+		(*itr2)->type = "";
+		toAdd.pop_front();
+	}
 	while(queue.size() > 0 || current != NULL || ioWait.size() > 0)
 	{
 		//checks for any new arrivals, and puts them in the back of the queue
-		checkArrivals(input,queue, counter, 1);
+		checkArrivals(input,toAdd, counter, 1);
 		//checks for proceces that have expired in the ioWait queue to put in the ready queue
-		checkIoWait(counter, ioWait, queue);
+		checkIoWait(counter, ioWait, toAdd);
+		toAdd.sort(id_sort());
+		while(!toAdd.empty())
+		{
+			//cout << "here" << endl;
+			itr2 = toAdd.begin();
+			queue.push_back(*itr2);
+			#if 1
+			if((*itr2)->type == "I/O"){
+				cout << "time " << counter << "ms: Process " << (*itr2)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl;  
+			}
+			else if( (*itr2)->type == "input" ){
+				cout << "time " << counter << "ms: Process " << (*itr2)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			}
+			else if( (*itr2)->type == "" ){
+
+			}
+			#endif
+			(*itr2)->type = "";
+			toAdd.pop_front();
+		}
 
 		//checks that the current Process that is being handled has not expiered
 		if(current != NULL && ((counter-counterStart) == (*current).burstTime))
@@ -397,9 +437,11 @@ void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, i
 	{
 		if( (*itr)->arrivalTime == currTime ){
 			toAdd.push_back(*itr);
+			(*itr)->type = "input";
 			if(fcfs)
 			{
-			cout << "time " << currTime << "ms: Process " << (*(*(itr))).id << " arrived and added to ready queue " << printQueue(toAdd) << endl;
+			
+			//cout << "time " << currTime << "ms: Process " << (*(*(itr))).id << " arrived and added to ready queue " << printQueue(toAdd) << endl;
 			}
 		}
 		else if( (*itr)->arrivalTime > currTime )
@@ -578,3 +620,4 @@ void freeList(list<Process*> & toFree)
 		delete(*iterator);
 	}	
 }
+
