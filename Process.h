@@ -15,11 +15,15 @@ public:
 	int arrivalTime;
 	int burstTime;
 	int numBurst;
+	int ogNumBurst;
 	int ioTime;
 	int burstRemain;
 	int ioWaitEnd;
 	string type;
+	int turnaroundArrival;
 	int timeTerminated;
+	int cs_switches;
+	int ioReturn;
 	void print();
 };
 
