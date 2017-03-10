@@ -3,74 +3,13 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
-#include <list>
-#include <unistd.h>
-#include "Process.h"
-
-std::string printQueue(const list<Process*> &queue);
-std::string printVec(const std::vector<Process*> &queue);
-bool remove_from_queue(std::vector<Process*> &queue, Process* removeme);
-
-class SRTSimulator
-{
-public:
-	SRTSimulator(std::list<Process*> &list) : clock(-1), idle(true), P(NULL), T(NULL)
-	{
-		// sorry, had to
-		for (std::list<Process*>::const_iterator itr = list.begin(); itr != list.end(); ++itr)
-		{
-			pslist.push_back(*itr);
-		}
-	}
-	
-	~SRTSimulator()
-	{
-		pslist.clear();
-		ready_queue.clear();
-		finish_queue.clear();
-	}
-	Process* ready_process(int tick)
-	{
-		for (unsigned int i = 0; i < pslist.size(); ++i)
-		{
-			if (pslist[i]->arrivalTime <= tick)
-			{
-				return (Process*)pslist[i];
-			}
-		}
-		return NULL;
-	}
-	void Run();
-
-private:
-	int clock;
-	bool idle;
-	Process* P;
-	Process* T;
-	std::vector<Process*> pslist;
-	std::vector<Process*> ready_queue;
-	std::vector<Process*> finish_queue;
-};
-
-
-
-#endif // !_simulator_h
-
-
-
-#ifndef _simulator_h
-#define _simulator_h
-
-#include <iostream>
-#include <string>
 #include <fstream>
 #include <list>
 #include <queue>
 #include <map>
 #include <algorithm>
 #include <utility>
-#include "process.h"
+#include "Process.h"
 
 class SRTCompare
 {
@@ -83,7 +22,7 @@ public:
 		}
 		else
 		{
-			return (p1->burstTime <= p2->burstTime);
+			return (p1->burstTime < p2->burstTime);
 		}
 	}
 };
@@ -154,13 +93,15 @@ public:
 		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> ready_queue;
 		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> waiting_queue;
 
+		std::cout << "time " << start_time << "ms: Simulator started for SRT " << PQ_Contents(ready_queue) << "\n";
+
 		while (!pslist.empty() || !ready_queue.empty() || !waiting_queue.empty())
 		{
 			while (!pslist.empty() && pslist.front()->arrivalTime <= finish_time)
 			{
-				std::cout << "time " << pslist.front()->arrivalTime << "ms: Process " << pslist.front()->id
-					<< " arrived and added to ready queue ";
 				ready_queue.push(pslist.front());
+				std::cout << "time " << pslist.front()->arrivalTime << "ms: Process " << pslist.front()->id
+					<< " arrived and added to ready queue " << PQ_Contents(ready_queue) << "\n";
 				pslist.pop_front();
 			}
 
@@ -226,8 +167,32 @@ public:
 		return retval;
 	}
 private:
+	std::string PQ_Contents(const std::priority_queue<Process*, std::vector<Process*>, SRTCompare> &pq) const
+	{
+		std::string retval = "[Q";
 
+		// queue is empty; no need for that costly operation ahead
+		if (pq.empty())
+		{
+			retval += " <empty>]";
+			return retval;
+		}
+
+
+		// Queues are normally not meant to be traversed for its contents, but for this assignment, this bulky memory copy is necessary
+		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> priorq = pq;
+
+		while (!priorq.empty())
+		{
+			retval += " " + priorq.top()->id;
+			priorq.pop();
+		}
+
+		retval += "]";
+		return retval;
+	}
 };
+
 
 #endif // !_simulator_h
 
