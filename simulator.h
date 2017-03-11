@@ -11,6 +11,29 @@
 #include <utility>
 #include "Process.h"
 
+// function object
+struct burst_remain_sort : public std::binary_function<Process*, Process*, bool>
+{
+	bool operator()(const Process* const& p1, const Process* const& p2)
+	{
+		if (p1->burstRemain == p2->burstRemain)
+		{
+			if (p1->arrivalTime < p2->arrivalTime)
+			{
+				return true;
+			}
+			else
+			{
+				return (p1->id < p2->id);
+			}
+		}
+		else
+		{
+			return (p1->burstRemain < p2->burstRemain);
+		}
+	}
+};
+
 class SRTCompare
 {
 public:
@@ -63,6 +86,7 @@ public:
 		int waitingTime;
 		int responseTime;
 		int numProcesses;
+		int numContextSwitches;
 	};
 
 	Stats GetStats() const { return stats; }
@@ -77,7 +101,7 @@ public:
 		std::cout << "-- total number of preemptions: " << "\n";
 	}
 
-	virtual std::queue<Process*> schedule(std::list<Process*> &pslist) = 0;
+	virtual void schedule(std::list<Process*> &pslist) = 0;
 protected:
 	std::string strAlgorithm;
 	Stats stats;
@@ -87,102 +111,150 @@ class SRTScheduler : public Scheduler
 {
 public:
 	SRTScheduler() : Scheduler("SRT") {}
-	std::queue<Process*> schedule(std::list<Process*> &input)
+	void schedule(std::list<Process*> &input)
 	{
 		int start_time = 0;
 		int finish_time = 0;
-		Process* p, remaining;
-		std::queue<Process*> retval;
+		Process* p = NULL, remaining;
 		std::map<std::string, int> start_times;
 		std::map<std::string, int> finish_times;
-		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> ready_queue;
-		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> waiting_queue;
-		std::list<Process*> pslist;
+		std::list<Process*> ready_queue;
+		std::list<Process*> waiting_queue;
+		std::list<Process*> pslist; // process queue
+		std::list<Process*> io_queue;
 
-		std::cout << "time " << start_time << "ms: Simulator started for SRT " << PQ_Contents(ready_queue) << "\n";
+		std::cout << "time " << start_time << "ms: Simulator started for SRT " << LL_Contents(ready_queue) << "\n";
 
-		while (!input.empty() || !ready_queue.empty() || !waiting_queue.empty())
+		CheckArrivals(input, pslist, finish_time);
+		pslist.sort(burst_remain_sort());
+		while (!pslist.empty())
+		{
+			std::list<Process*>::iterator itr = pslist.begin();
+			ready_queue.push_back(*itr);
+			if ((*itr)->type == "I/O")
+			{
+				std::cout << "time " << finish_time << "ms: Process " << (*itr)->id
+					<< " completed I/O; added to ready queue " << LL_Contents(ready_queue) << "\n";
+			}
+			else if ((*itr)->type == "input")
+			{
+				std::cout << "time " << finish_time << "ms: Process " << (*itr)->id
+					<< " arrived and added to ready queue " << LL_Contents(ready_queue) << "\n";
+			}
+			else
+			{
+
+			}
+			(*itr)->type = "";
+			pslist.pop_front();
+		}
+
+		while (!ready_queue.empty() || !waiting_queue.empty() || p != NULL)
 		{
 			// check for and add arrival processes
 			CheckArrivals(input, pslist, finish_time);
+			CheckIoWait(finish_time, waiting_queue, ready_queue);
+			pslist.sort(burst_remain_sort());
 			while (!pslist.empty() && pslist.front()->arrivalTime <= finish_time)
 			{
-				ready_queue.push(pslist.front());
-				std::cout << "time " << finish_time << "ms: Process " << pslist.front()->id
-					<< " arrived and added to ready queue " << PQ_Contents(ready_queue) << "\n";
-				pslist.pop_front();
-			}
-
-			if (ready_queue.empty())
-			{
-				if (waiting_queue.empty())
+				std::list<Process*>::iterator itr = pslist.begin();
+				ready_queue.push_back(*itr);
+				if ((*itr)->type == "I/O")
 				{
-					p = pslist.front();
-					pslist.pop_front();
+					std::cout << "time " << finish_time << "ms: Process " << (*itr)->id
+						<< " completed I/O; added to ready queue " << LL_Contents(ready_queue) << "\n";
+				}
+				else if ((*itr)->type == "input")
+				{
+					std::cout << "time " << finish_time << "ms: Process " << (*itr)->id
+						<< " arrived and added to ready queue " << LL_Contents(ready_queue) << "\n";
 				}
 				else
 				{
-					p = waiting_queue.top();
-					waiting_queue.pop();
+
+				}
+				(*itr)->type = "";
+				pslist.pop_front();
+			}
+
+			if (p != NULL && (finish_time - start_time == (*p).burstTime))
+			{
+				CheckCurrent(ready_queue, waiting_queue, p, finish_time, start_time, input);
+			}
+			else if (p == NULL)
+			{
+				if (!ready_queue.empty())
+				{
+					LoadCPU(finish_time, ready_queue, waiting_queue, p, start_time, input);
+					p = *ready_queue.begin();
+					start_time = finish_time;
+					ready_queue.pop_front();
+					cout << "time " << finish_time << "ms: Process " << p->id << " started using the CPU " << LL_Contents(ready_queue) << endl;
 				}
 			}
-			else if (waiting_queue.empty())
+			++finish_time;
+		}
+		std::cout << "time " << finish_time << "ms: Simulator ended for SRT\n";
+	}
+private:
+	void CheckCurrent(list<Process*> &queue, list<Process*> &ioWait, Process* &current, int counter, int &counterStart, list<Process*> &input)
+	{
+		(*current).numBurst--;
+		if (current->numBurst > 0)
+			// if the process has cpu burst remaining there are two options 
+			// 1. there is another process in the ready queue that can be worked on
+			// 2. there are no processes left in the cpu so the current process is set to NULL such that the current program can wait for another process to come out of io time or there are so process left and the program ends
+		{
+			current->ioWaitEnd = (int)((int)counter + (int)(current->ioTime + 3));
+			ioWait.push_back(current);
+
+			if ((*current).numBurst == 1) {
+				cout << "time " << counter << "ms: Process " << (*current).id << " completed a CPU burst; " << (*current).numBurst << " burst to go " << LL_Contents(queue) << endl;
+			}
+			else {
+				cout << "time " << counter << "ms: Process " << (*current).id << " completed a CPU burst; " << (*current).numBurst << " bursts to go " << LL_Contents(queue) << endl;
+
+			}
+			LoadCPU(counter, queue, ioWait, current, counterStart, input);
+			cout << "time " << counter - 3 << "ms: Process " << (*current).id << " switching out of CPU; will block on I/O until time " << (*current).ioWaitEnd << "ms " << LL_Contents(queue) << endl;
+
+			if (!queue.empty())
 			{
-				p = ready_queue.top();
-				ready_queue.pop();
+				LoadCPU(counter, queue, ioWait, current, counterStart, input);
+				current = *queue.begin();
+				queue.pop_front();
+				counterStart = counter;
+				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << LL_Contents(queue) << endl;
+
 			}
 			else
 			{
-				if (ready_queue.top()->burstTime < waiting_queue.top()->burstTime)
-				{
-					p = (ready_queue.top());
-					ready_queue.pop();
-				}
-				else 
-				{ 
-					p = (waiting_queue.top()); 
-					waiting_queue.pop();
-				}
+				current = NULL;
 			}
 
-			start_time = std::max((int)std::ceil(p->arrivalTime), finish_time);
-			finish_time = start_time + 1;
+		}
+		else
+			//if the process has no cpu burst remaining the process is terminated or set to null if no other process are on the ready queue
+		{
+			cout << "time " << counter << "ms: Process " << current->id << " terminated " << LL_Contents(queue) << endl;
+			LoadCPU(counter, queue, ioWait, current, counterStart, input);
 
-			if (start_times.find(p->id) == start_times.end())
+
+			if (!queue.empty())
 			{
-				start_times.insert(std::make_pair(p->id, start_time));
-				stats.waitingTime += (start_time - p->arrivalTime);
-				stats.responseTime += (start_time - p->arrivalTime + 1);
+				LoadCPU(counter, queue, ioWait, current, counterStart, input);
+				current = *queue.begin();
+				queue.pop_front();
+				counterStart = counter;
+				cout << "time " << counter << "ms: Process " << current->id << " started using the CPU " << LL_Contents(queue) << endl;
 			}
 			else
 			{
-				stats.waitingTime += (start_time - finish_times.find(p->id)->second);
-			}
-
-			if (p->burstTime > ready_queue.top()->burstTime)
-			{
-				remaining = *p;
-				remaining.burstTime--;
-
-				if (remaining.burstTime == 0)
-				{
-					waiting_queue.push(&remaining);
-					std::cout << "time " << finish_time << "ms: Process " << remaining.id
-						<< " arrived and will preempt " << PQ_Contents(ready_queue) << "\n";
-				}
-				
-				finish_times.insert(std::make_pair(remaining.id, finish_time));
-			}
-			else // process terminates
-			{
-				stats.numProcesses++;
-				stats.turnaroundTime += (finish_time - start_times.find(p->id)->second);
+				current = NULL;
 			}
 		}
 
-		return retval;
 	}
-private:
 	void CheckArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime) 
 	{
 		if (input.empty() || ((*input.begin())->arrivalTime != currTime))
@@ -206,7 +278,55 @@ private:
 		{
 			input.pop_front();
 		}
-}
+	}
+	void CheckIoWait(int counter, list<Process*> &ioWait, list<Process*> &queue)
+	{
+		list<Process*>::iterator iterator = ioWait.begin();
+		//loops thru the list od ioWait Processes
+		while (iterator != ioWait.end())
+		{
+			if ((*iterator)->ioWaitEnd == counter)
+			{
+				//two options the the process has remaining burst in cpu to be completed
+				//-> need to check put process back in ready queue
+				//or the process is completely done executing
+				//-> process needs to be terminated
+				if ((*iterator)->numBurst > 0)
+				{//case 1
+				 //pushes process to the end of the queue and deletes it from the ioWait 
+				 // queue
+					(*iterator)->type = "I/O";
+					queue.push_back(*iterator);
+					// alternatively, i = items.erase(i);
+					ioWait.erase(iterator++);
+
+				}
+				// case two
+				else
+				{
+					cout << (*iterator)->id << " is done and has been removed from precesses" << endl;
+					ioWait.erase(iterator++);
+
+				}
+			}
+			//just increment the iterator
+			else
+			{
+				++iterator;
+			}
+		}
+	}
+	void LoadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input)
+	{
+		int delay;
+
+		for (delay = 0; delay < 3; delay++)
+		{
+			CheckIoWait(counter, ioWait, queue);
+			CheckArrivals(input, queue, counter);
+			counter++;
+		}
+	}
 	std::string PQ_Contents(const std::priority_queue<Process*, std::vector<Process*>, SRTCompare> &pq) const
 	{
 		std::string retval = "[Q";
@@ -224,6 +344,26 @@ private:
 		{
 			retval += " " + priorq.top()->id;
 			priorq.pop();
+		}
+
+		retval += "]";
+		return retval;
+	}
+
+	std::string LL_Contents(const std::list<Process*> &pq) const
+	{
+		std::string retval = "[Q";
+
+		// queue is empty; no need for that costly operation ahead
+		if (pq.empty())
+		{
+			retval += " <empty>]";
+			return retval;
+		}
+		
+		for (std::list<Process*>::const_iterator itr = pq.begin(); itr != pq.end(); ++itr)
+		{
+			retval += " " + (*itr)->id;
 		}
 
 		retval += "]";
