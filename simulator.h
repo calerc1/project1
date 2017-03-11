@@ -115,7 +115,8 @@ public:
 	{
 		int start_time = 0;
 		int finish_time = 0;
-		Process* p = NULL, remaining;
+		bool ctx_switch = false;
+		Process* p = NULL, *pswitch = NULL;
 		std::map<std::string, int> start_times;
 		std::map<std::string, int> finish_times;
 		std::list<Process*> ready_queue;
