@@ -5,6 +5,7 @@
 #include<list>
 #include<sstream>
 #include<stdlib.h>
+#include<iomanip>
 #include"Process.h"
 
 #define t_cs 6
@@ -18,9 +19,9 @@ using namespace std;
 
 void readFile(list<Process*> &input, char* fileName);
 void parseLine(list<Process*> &input, string &line);
-void FCFS(list<Process*> input, char* outputFile);
+void FCFS(list<Process*> input, char* outputFile, ofstream &file);
 void SRT(list<Process*> &input);
-void RR(list<Process*> input, char* outputFile);
+void RR(list<Process*> input, char* outputFile, ofstream &file);
 void checkArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime, int fcfs);
 string printQueue(const list<Process*> &queue);
 //bool compare_id(const Process& p1, const Process& p2);
@@ -29,8 +30,8 @@ void checkIoWait(int counter, list<Process*> &ioWait , list<Process*> &queue);
 void loadCPU(int &counter, list<Process*> &queue, list<Process*> &ioWait, Process* &current, int &counterStart, list<Process*> &input);
 void copyList(list<Process*> &queue, list<Process*> &copyArray);
 void freeList(list<Process*> &toFree);
-void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts, char* fileName );
-void printStatistics(char* fileName, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch);
+void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts , ofstream &file);
+void printStatistics(ofstream &file, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch);
 
 
 
@@ -68,11 +69,13 @@ int main(int argc, char* argv[])
 	list<Process*> inputData;
 	char* fileName = argv[1];
 	char* outputFile = argv[2];
+	ofstream file;
+	file.open(outputFile);
 	readFile(inputData,fileName);
 	//////////////FCFS//////////////////
 	list<Process*> FCFSList;
 	copyList(inputData, FCFSList);
-	FCFS(FCFSList, outputFile); 
+	FCFS(FCFSList, outputFile,file); 
 	freeList(FCFSList);
 	cout << endl <<endl;
 	/////////////SRT///////////////////
@@ -84,7 +87,7 @@ int main(int argc, char* argv[])
 	////////////RR////////////////////
 	list<Process*> RRList;
 	copyList(inputData, RRList);
-	RR(RRList, outputFile);
+	RR(RRList, outputFile,file);
 	//freeList(RRList);
 
 	//this will delete all the data from the list<Process*> 
@@ -131,7 +134,7 @@ void parseLine(list<Process*> &input , string &line)
 	input.push_back(node);
 }
 
-void FCFS(list<Process*> input, char* outputFile)
+void FCFS(list<Process*> input, char* outputFile, ofstream &file)
 {
 	#if 1 
 	//All time gone by counter
@@ -243,7 +246,8 @@ void FCFS(list<Process*> input, char* outputFile)
 	
 	cout << "time "  << (counter + 2) << "ms: Simulator ended for FCFS" << endl;
 	#endif
-	printStatistics(outputFile, averageWait, averageBurst, averageTurnaround, totalPreemptions, numContextSwitch);
+	file << "Algorithm FCFS" << endl;
+	printStatistics(file, averageWait, averageBurst, averageTurnaround, totalPreemptions, numContextSwitch);
 }
 
 void SRT(list<Process*> &input)
@@ -489,7 +493,7 @@ void SRT(list<Process*> &input)
 	#endif
 }
 
-void RR(list<Process*> input, char* outputFile)
+void RR(list<Process*> input, char* outputFile, ofstream &file)
 {	
 	#if 1 
 	//priority q for all arriving process
@@ -552,7 +556,7 @@ void RR(list<Process*> input, char* outputFile)
 			//}
 			if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL){
 				printf("time %dms: Simulator ended for RR\n", i);
-				resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, outputFile);
+				resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, file);
 				return;
 			}	
 		}
@@ -724,7 +728,7 @@ void RR(list<Process*> input, char* outputFile)
 		//End Condition
 		if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL && !cs){
 			printf("time %dms: Simulator ended for RR\n", i);
-			resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, outputFile);
+			resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, file);
 			return;
 		}
 		++i;
@@ -928,7 +932,7 @@ void freeList(list<Process*> & toFree)
 	}	
 }
 
-void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts , char* fileName ){
+void resultsRR(list<Process*> &finished, int preemptions, int context_switches, int totalWait, int totalTurnaround, int totBursts , ofstream &file){
 	float averageBurst = 0;
 	float averageTurnaround = 0;
 	float averageWait = 0;
@@ -954,21 +958,19 @@ void resultsRR(list<Process*> &finished, int preemptions, int context_switches, 
 	cout << "-- total number of preemptions: " << preemptions << endl;
 	//cout << "-- total number of bursts: " << totBursts << endl;
 	#endif
-	printStatistics(fileName, averageWait, averageBurst, averageTurnaround, preemptions, context_switches);
+	file << "Algorithm RR" << endl;
+	printStatistics(file, averageWait, averageBurst, averageTurnaround, preemptions, context_switches);
+	file.close();
 	freeList(finished);
 }
 
-void printStatistics(char* fileName, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch)
+void printStatistics(ofstream &file, float &averageWait, float &averageBurst, float &averageTurnaround, int &totalPreemptions, int &numContextSwitch)
 {
-	ofstream file;
-	file.open(fileName);
-	file << "Algorithm FCFS" << endl;
-	file << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
+	file << fixed << setprecision(2) << "-- average CPU burst time: " <<  averageBurst << " ms" << endl;
 	file << "-- average wait time: " << averageWait << " ms" << endl;
 	file << "-- average turnaround time: " <<  averageTurnaround << " ms" << endl;
 	file << "-- total number of context switches: " << numContextSwitch << endl;
 	file << "-- total number of preemptions: " << totalPreemptions << endl;
-	file.close();
 }
 
 
