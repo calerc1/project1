@@ -34,29 +34,6 @@ struct burst_remain_sort : public std::binary_function<Process*, Process*, bool>
 	}
 };
 
-class SRTCompare
-{
-public:
-	bool operator() (Process* p1, Process* p2)
-	{
-		if (p1->burstTime == p2->burstTime)
-		{
-			if (p1->arrivalTime > p2->arrivalTime)
-			{
-				return true;
-			}
-			else
-			{
-				return (p1->id > p2->id);
-			}
-		}
-		else
-		{
-			return (p1->burstTime > p2->burstTime);
-		}
-	}
-};
-
 class Scheduler
 {
 public:
