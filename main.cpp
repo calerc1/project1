@@ -42,6 +42,19 @@ struct id_sort : public std::binary_function<Process*, Process*, bool>
 		return (*p1).id < (*p2).id;
 	}
 };
+// function object
+struct burstRemain_sort : public std::binary_function<Process*, Process*, bool>
+{
+	bool operator()(const Process* const& p1, const Process* const& p2)
+	{
+		if( (*p1).burstRemain == (*p2).burstRemain ){
+			return (*p1).arrivalTime < (*p2).arrivalTime;
+		}
+		else{
+			return (*p1).burstRemain < (*p2).burstRemain 
+		}
+	}
+};
 
 /////////////////////////MAIN///////////////////////////////////
 
@@ -235,7 +248,245 @@ void FCFS(list<Process*> input, char* outputFile)
 
 void SRT(list<Process*> &input)
 {
-	
+	#if 1 
+	//priority q for all arriving process
+	list<Process*> queue;
+	list<Process*> newArrivals;
+	list<Process*> toAdd;
+	list<Process*> ioQueue;
+	list<Process*> finished;
+	Process* current = NULL;
+	Process* p_cs = NULL;  //the process to be in the context switch
+	//current should = NULL while p_cs has a value
+	int cs_counter = 0; //counts up to 3 and 6
+	//int ts_expire = 0; //time the current time slice will expire upon (process start time + t_slice)
+	bool cs = false;
+	bool ioAdd = false;
+	bool start = false;
+	int i = 0;
+	int context_switches = 0;
+	int preemptions = 0;
+	int waitCount = 0;
+	int totalTurnaround = 0;
+	int totalBursts = 0;
+	list<Process*>::iterator itr;
+	cout << "time " << i << "ms: Simulator started for RR " << printQueue(queue) << endl;
+	while(1){
+		//cout << "time " << i << endl;
+		checkArrivals(input, newArrivals, i, 0);
+		if(cs && cs_counter == t_cs/2){
+			++context_switches;
+			//if(!queue.empty()){
+			if( p_cs!= NULL ){
+				totalTurnaround += (i - (*p_cs).turnaroundArrival);
+			
+				#if 0
+				cout << "time " << i << "ms: Turnaround time added: " << (i - (*p_cs).turnaroundArrival) << endl;
+				cout << "time " << i << "ms: Total Turnaround time: " << totalTurnaround << endl;
+				#endif
+
+				//add p_cs to I/o wait queue
+				/*ADD OLD PC_S TO i/o wait queue here */
+				if(ioAdd){
+					(*p_cs).ioWaitEnd = i + (*p_cs).ioTime;
+					ioQueue.push_back(p_cs);
+					#if 0
+					cout << "time " << i << "ms: IoQueue: " << printQueue(ioQueue) << endl;
+					#endif
+					//p_cs = NULL;
+				}
+				else{
+					toAdd.push_back(p_cs);
+					++(*p_cs).cs_switches;
+					//p_cs = NULL;
+				}
+					p_cs = NULL;
+			}
+			if(!queue.empty()){
+				queue.sort( burstRemain_sort() );
+				p_cs = *queue.begin();
+				queue.pop_front();
+			}
+			//}
+			if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL){
+				printf("time %dms: Simulator ended for SRT\n", i);
+				resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, outputFile);
+				return;
+			}	
+		}
+		//if context switch fully completes print statement and start operating on CPU process
+		if(cs && cs_counter == 6){
+			cs = false;
+			cs_counter = 0;
+			current = p_cs;
+			p_cs = NULL;
+			//++waitCount;
+			if(current != NULL){
+				if( (*current).burstRemain < (*current).burstTime && (*current).burstRemain != 0 ){
+					cout << "time " << i << "ms: Process " << (*current).id << " started using the CPU with " << (*current).burstRemain << "ms remaining " << printQueue(queue) << endl;
+				}
+				else{
+					(*current).burstRemain = (*current).burstTime;
+					cout << "time " << i << "ms: Process " << (*current).id << " started using the CPU " << printQueue(queue) << endl;
+				}
+				start = true;
+			}
+		}	
+		//standard CPU operation on current. --burstremain
+		if(!cs && current != NULL){
+			if(start){
+				start = false;
+			}
+			else{
+				--(*current).burstRemain;
+			}
+		}	
+		//if working on current
+		#if 1
+		//premption occurs due to time slice (initiate context switch)
+		if(!cs && current != NULL && ts_expire == i && (*current).burstRemain != 0){
+			if(queue.empty()){
+				cout << "time " << i << "ms: Time slice expired; no preemption because ready queue is empty [Q <empty>]" << endl;
+				//--(*current).burstRemain; //= (*current).burstTime - t_slice;
+				ts_expire = i + t_slice;
+				//++context_switches;
+			}
+			else{
+				//--(*current).burstRemain;
+				cout << "time " << i << "ms: Time slice expired; process " << (*current).id <<  " preempted with " << (*current).burstRemain << "ms to go " << printQueue (queue) << endl;
+				cs = true;
+				cs_counter = 0;
+				p_cs = current;
+				current = NULL;
+				ioAdd = false;
+				++preemptions;
+				//++context_switches;
+			}
+		}
+		#endif
+		
+		
+		//process completes CPU burst/terminates
+		if( !cs && current != NULL && (*current).burstRemain == 0 ){
+			//set burst remain to I/O time and add to I/O queue
+			(*current).ioWaitEnd = i + 3 + (*current).ioTime;
+			//Process has more burst remaining
+			if( (*current).numBurst > 1 ){
+				--(*current).numBurst;
+				if((*current).numBurst == 1){
+					cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " burst to go " << printQueue(queue) << endl;
+					#if 0
+					waitCount += (i - (*current).turnaroundArrival) - (*current).burstTime;
+					cout << "time " << i << "ms: Turnaround time added: " << (i - (*current).turnaroundArrival) << endl;
+					cout << "time " << i << "ms: waitCount added: " << (i - (*current).turnaroundArrival) - (*current).burstTime << ", Total waitCount: " << waitCount << ", " << printQueue(queue)<< endl;
+					#endif
+				}
+				else{
+					cout << "time " << i << "ms: Process " << (*current).id <<" completed a CPU burst; " << (*current).numBurst << " bursts to go " << printQueue(queue) << endl;
+					#if 0
+					waitCount += (i - (*current).turnaroundArrival) - (*current).burstTime;
+					cout << "time " << i << "ms: Turnaround time added: " << (i - (*current).turnaroundArrival) << endl;
+					cout << "time " << i << "ms: waitCount added: " << (i - (*current).turnaroundArrival) - (*current).burstTime << ", Total waitCount: " << waitCount << ", " << printQueue(queue)<< endl;
+					#endif
+				}
+				cout << "time " << i << "ms: Process " << (*current).id << " switching out of CPU; will block on I/O until time " << i + (*current).ioTime + 3 <<"ms " << printQueue(queue) << endl;
+				p_cs = current;
+				#if 1
+					waitCount += (i - (*p_cs).ioReturn) - (*p_cs).burstTime;
+					//cout << "time " << i << "ms: Turnaround time added: " << (i - (*p_cs).ioReturn) << endl;
+					//cout << "time " << i << "ms: waitCount added: " << (i - (*p_cs).ioReturn) - (*p_cs).burstTime << ", Total waitCount: " << waitCount << ", " << printQueue(queue)<< endl;
+				#endif
+				ioAdd = true;
+			}
+			//Process has no more bursts remaining
+			else{
+				
+				cout << "time " << i <<"ms: Process " << (*current).id << " terminated " << printQueue(queue) << endl;
+				Process* temp = current;
+				(*temp).timeTerminated = i;
+				totalTurnaround += (i - (*temp).turnaroundArrival) + 3;
+				waitCount += (*temp).timeTerminated - (*temp).ioReturn - (*temp).burstTime;
+				//cout << "time " << i << "ms: Turnaround time added: " << (i - (*temp).ioReturn) << endl;
+				//cout << "time " << i << "ms: waitCount added: " << (*temp).timeTerminated - (*temp).ioReturn - (*temp).burstTime << ", Total waitCount: " << waitCount << ", " << printQueue(queue)<< endl;
+				//cout << (*temp).id << "|" << (*temp).burstTime << "|" << (*temp).ioReturn <<  endl;
+
+				current = NULL;
+				//delete(temp);
+				finished.push_back(temp);
+				p_cs = NULL;
+			}
+			current = NULL;
+			cs = true;
+			cs_counter = 0;
+		}
+		//Handle print statements for newArrival processes
+		while(!newArrivals.empty()){
+			itr = newArrivals.begin();
+			totalBursts += (*itr)->numBurst;
+			//queue.push_back(*itr);
+			(*itr)->type = "input";
+			toAdd.push_back(*itr);
+			//cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			newArrivals.pop_front();
+			
+		}
+	#if 0
+		if(i == 1600){
+			return;
+		}
+	#endif
+		if(cs){
+			++cs_counter;
+		}
+		//updateIOQueue(ioQueue);
+		//officially add all processes to queue
+		checkIoWait(i, ioQueue, toAdd);
+		#if 1
+		toAdd.sort(id_sort());
+		#endif
+		while(!toAdd.empty()){
+			itr = toAdd.begin();
+			(*itr)->turnaroundArrival = i;
+			queue.push_back(*itr);
+			#if 1
+			if((*itr)->type == "I/O"){
+				cout << "time " << i << "ms: Process " << (*itr)->id << " completed I/O; added to ready queue " << printQueue(queue) << endl;  
+			}
+			else if( (*itr)->type == "input" ){
+				cout << "time " << i << "ms: Process " << (*itr)->id << " arrived and added to ready queue " << printQueue(queue) << endl;
+			}
+			else if( (*itr)->type == "" ){
+
+			}
+			#endif
+			(*itr)->type = "";
+			toAdd.pop_front();
+		}
+		#if 0
+		waitCount += queue.size();
+		
+		cout << "time " << i << "ms: waitCount added: " << queue.size() << ", Total waitCount: " << waitCount << ", " << printQueue(queue)<< endl;
+		#endif
+
+
+		//start condition (count from 3 to 6)
+		if(!queue.empty() && current == NULL && p_cs == NULL && cs == false){
+			p_cs = *queue.begin();
+			queue.pop_front();
+			cs = true;
+			cs_counter = 4;
+		}
+		
+
+		//End Condition
+		if(queue.empty() && input.empty() && ioQueue.empty() && current == NULL && p_cs == NULL && !cs){
+			printf("time %dms: Simulator ended for RR\n", i);
+			resultsRR(finished, preemptions, context_switches, waitCount, totalTurnaround, totalBursts, outputFile);
+			return;
+		}
+		++i;
+	}
+	#endif
 }
 
 void RR(list<Process*> input, char* outputFile)
