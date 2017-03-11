@@ -305,29 +305,6 @@ private:
 			counter++;
 		}
 	}
-	std::string PQ_Contents(const std::priority_queue<Process*, std::vector<Process*>, SRTCompare> &pq) const
-	{
-		std::string retval = "[Q";
-
-		// queue is empty; no need for that costly operation ahead
-		if (pq.empty())
-		{
-			retval += " <empty>]";
-			return retval;
-		}
-		// Queues are normally not meant to be traversed for its contents, but for this assignment, this bulky memory copy is necessary
-		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> priorq = pq;
-
-		while (!priorq.empty())
-		{
-			retval += " " + priorq.top()->id;
-			priorq.pop();
-		}
-
-		retval += "]";
-		return retval;
-	}
-
 	std::string LL_Contents(const std::list<Process*> &pq) const
 	{
 		std::string retval = "[Q";
