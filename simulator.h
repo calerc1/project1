@@ -42,7 +42,7 @@ public:
 	class Stats
 	{
 	public:
-		Stats() {}
+		Stats(): turnaroundTime(0), waitingTime(0), responseTime(0), numProcesses(0) {}
 		Stats(const Stats &s) : turnaroundTime(s.turnaroundTime), waitingTime(s.waitingTime), responseTime(s.responseTime), numProcesses(s.numProcesses)
 		{
 
@@ -87,21 +87,24 @@ class SRTScheduler : public Scheduler
 {
 public:
 	SRTScheduler() : Scheduler("SRT") {}
-	std::queue<Process*> schedule(std::list<Process*> &pslist)
+	std::queue<Process*> schedule(std::list<Process*> &input)
 	{
 		int start_time = 0;
 		int finish_time = 0;
-		Process* p, *scheduled, remaining;
+		Process* p, remaining;
 		std::queue<Process*> retval;
 		std::map<std::string, int> start_times;
 		std::map<std::string, int> finish_times;
 		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> ready_queue;
 		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> waiting_queue;
+		std::list<Process*> pslist;
 
 		std::cout << "time " << start_time << "ms: Simulator started for SRT " << PQ_Contents(ready_queue) << "\n";
 
-		while (!pslist.empty() || !ready_queue.empty() || !waiting_queue.empty())
+		while (!input.empty() || !ready_queue.empty() || !waiting_queue.empty())
 		{
+			// check for and add arrival processes
+			CheckArrivals(input, pslist, finish_time);
 			while (!pslist.empty() && pslist.front()->arrivalTime <= finish_time)
 			{
 				ready_queue.push(pslist.front());
@@ -127,7 +130,6 @@ public:
 			{
 				p = ready_queue.top();
 				ready_queue.pop();
-
 			}
 			else
 			{
@@ -157,11 +159,18 @@ public:
 				stats.waitingTime += (start_time - finish_times.find(p->id)->second);
 			}
 
-			if (p->burstTime > 1)
+			if (p->burstTime > ready_queue.top()->burstTime)
 			{
 				remaining = *p;
 				remaining.burstTime--;
-				waiting_queue.push(&remaining);
+
+				if (remaining.burstTime == 0)
+				{
+					waiting_queue.push(&remaining);
+					std::cout << "time " << finish_time << "ms: Process " << remaining.id
+						<< " arrived and will preempt " << PQ_Contents(ready_queue) << "\n";
+				}
+				
 				finish_times.insert(std::make_pair(remaining.id, finish_time));
 			}
 			else // process terminates
@@ -174,6 +183,30 @@ public:
 		return retval;
 	}
 private:
+	void CheckArrivals(list<Process*> &input, list<Process*> &toAdd, int currTime) 
+	{
+		if (input.empty() || ((*input.begin())->arrivalTime != currTime))
+			return;
+
+		list<Process*>::iterator itr;
+		int i = 0;
+		for (itr = input.begin(); itr != input.end(); itr++)
+		{
+			if ((*itr)->arrivalTime == currTime) {
+				toAdd.push_back(*itr);
+				(*itr)->type = "input";
+			}
+			else if ((*itr)->arrivalTime > currTime)
+			{
+				break;
+			}
+			++i;
+		}
+		for (int j = 0; j < i; ++j)
+		{
+			input.pop_front();
+		}
+}
 	std::string PQ_Contents(const std::priority_queue<Process*, std::vector<Process*>, SRTCompare> &pq) const
 	{
 		std::string retval = "[Q";
@@ -184,8 +217,6 @@ private:
 			retval += " <empty>]";
 			return retval;
 		}
-
-
 		// Queues are normally not meant to be traversed for its contents, but for this assignment, this bulky memory copy is necessary
 		std::priority_queue<Process*, std::vector<Process*>, SRTCompare> priorq = pq;
 
