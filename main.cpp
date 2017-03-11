@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 	/////////////SRT///////////////////
 	list<Process*> SRTList;
 	//copyList(inputData, SRTList);
-	//SRT(SRTList);
+	SRT(SRTList);
 	freeList(SRTList);
 	cout << endl <<endl;
 	////////////RR////////////////////
